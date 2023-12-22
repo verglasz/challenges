@@ -16,8 +16,7 @@ Here are some examples of tasks:
 ## The Values Values are expressions that contain numbers, arithmetic,
 ## memory references and whether dAnkan can walk forwards.<br><br>
 ## They are evaluated right to left because dAnkan is always right.
-<img src="https://cdn.betterttv.net/emote/61943b0054f3344f8805f2d5/3x.png" width="48" height="48"
-style="float:right" />
+<img src="https://cdn.betterttv.net/emote/61943b0054f3344f8805f2d5/3x.png" width="48" height="48" style="float:right" />
 
 Here are some examples and their results:
  - `5 + 4 / 2` becomes 7
