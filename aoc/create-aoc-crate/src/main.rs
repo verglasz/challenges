@@ -64,6 +64,8 @@ fn create_day_crate(day: u8) -> String {
         .arg("--name")
         .arg(&crate_name)
         .spawn()
+        .expect("Failed to spawn cargo ws")
+        .wait()
         .expect("Failed to create day crate");
     crate_name
 }
@@ -75,6 +77,8 @@ fn init_day_crate(crate_name: &str) {
         .arg("utils")
         .current_dir(crate_name)
         .spawn()
+        .expect("Failed to spawn cargo add")
+        .wait()
         .expect("Failed to add `utils` to deps");
     let mut main =
         File::create(format!("{}/src/main.rs", crate_name)).expect("Failed to create/open main.rs");
