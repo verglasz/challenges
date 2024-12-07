@@ -1,4 +1,6 @@
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+use core::fmt;
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Point<T> {
     pub x: T,
     pub y: T,
@@ -7,6 +9,18 @@ pub struct Point<T> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VecMat<T> {
     data: Vec<Vec<T>>,
+}
+
+impl fmt::Display for VecMat<u8> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        for row in &self.data {
+            for &c in row {
+                write!(f, "{}", c as char)?;
+            }
+            writeln!(f)?;
+        }
+        Ok(())
+    }
 }
 
 impl<T> VecMat<T> {
@@ -37,6 +51,10 @@ impl<T> VecMat<T> {
         self.data.len()
     }
 
+    pub fn shape(&self) -> (usize, usize) {
+        (self.rows(), self.cols())
+    }
+
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
     }
@@ -47,6 +65,22 @@ impl<T> VecMat<T> {
 
     pub fn get_mut(&mut self, p: Point<usize>) -> Option<&mut T> {
         self.data.get_mut(p.y).and_then(|row| row.get_mut(p.x))
+    }
+
+    pub fn find(&self, value: &T) -> Option<Point<usize>>
+    where
+        T: PartialEq,
+    {
+        for (y, row) in self.data.iter().enumerate() {
+            if let Some(x) = row.iter().position(|v| v == value) {
+                return Some(Point::new(x, y));
+            }
+        }
+        None
+    }
+
+    pub fn iter_all(&self) -> impl Iterator<Item = &T> {
+        self.data.iter().flat_map(|v| v.iter())
     }
 }
 
@@ -100,7 +134,7 @@ impl<T> Matrix<T> {
     }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Delta<T> {
     pub dx: T,
     pub dy: T,
@@ -131,9 +165,17 @@ impl Point<usize> {
         let y = self.y.checked_add_signed(d.dy)?;
         Some(Self { x, y })
     }
+
+    pub fn in_bounds(&self, (width, height): (usize, usize)) -> bool {
+        self.x < width && self.y < height
+    }
+
+    pub fn as_in_bounds(&self, (width, height): (usize, usize)) -> Option<Self> {
+        self.in_bounds((width, height)).then_some(*self)
+    }
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Dir {
     N,
     NE,
@@ -169,6 +211,58 @@ impl Dir {
             Dir::SW => (-1, 1),
             Dir::W => (-1, 0),
             Dir::NW => (-1, -1),
+        }
+    }
+
+    pub fn clockwise(&self) -> Self {
+        match self {
+            Dir::N => Dir::NE,
+            Dir::NE => Dir::E,
+            Dir::E => Dir::SE,
+            Dir::SE => Dir::S,
+            Dir::S => Dir::SW,
+            Dir::SW => Dir::W,
+            Dir::W => Dir::NW,
+            Dir::NW => Dir::N,
+        }
+    }
+
+    pub fn counterclockwise(&self) -> Self {
+        match self {
+            Dir::N => Dir::NW,
+            Dir::NE => Dir::N,
+            Dir::E => Dir::NE,
+            Dir::SE => Dir::E,
+            Dir::S => Dir::SE,
+            Dir::SW => Dir::S,
+            Dir::W => Dir::SW,
+            Dir::NW => Dir::W,
+        }
+    }
+
+    pub fn clockwise_cross(&self) -> Self {
+        match self {
+            Dir::N => Dir::E,
+            Dir::E => Dir::S,
+            Dir::S => Dir::W,
+            Dir::W => Dir::N,
+            Dir::NE => Dir::SE,
+            Dir::SE => Dir::SW,
+            Dir::SW => Dir::NW,
+            Dir::NW => Dir::NE,
+        }
+    }
+
+    pub fn counterclockwise_cross(&self) -> Self {
+        match self {
+            Dir::N => Dir::W,
+            Dir::W => Dir::S,
+            Dir::S => Dir::E,
+            Dir::E => Dir::N,
+            Dir::NE => Dir::NW,
+            Dir::NW => Dir::SW,
+            Dir::SW => Dir::SE,
+            Dir::SE => Dir::NE,
         }
     }
 
