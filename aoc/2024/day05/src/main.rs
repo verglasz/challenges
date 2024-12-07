@@ -117,4 +117,18 @@ mod tests {
         let mut input = parse(input.lines());
         assert_eq!(solve2(&mut input), 123);
     }
+
+    #[test]
+    fn input1() {
+        let input = include_str!("../input");
+        let mut input = parse(input.lines());
+        assert_eq!(solve1(&mut input), 3608);
+    }
+
+    #[test]
+    fn input2() {
+        let input = include_str!("../input");
+        let mut input = parse(input.lines());
+        assert_eq!(solve2(&mut input), 4922);
+    }
 }
