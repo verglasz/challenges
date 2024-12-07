@@ -42,8 +42,30 @@ fn solve1(input: &Input) -> usize {
 fn solve<const N: usize>(input: &Input, maps: [fn(usize, usize) -> Option<usize>; N]) -> usize {
     input
         .iter()
-        .filter_map(|(target, ops)| reachable(*target, ops, maps).then_some(target))
+        // .filter_map(|(target, ops)| reachable(*target, ops, maps).then_some(target))
+        .filter_map(|(target, ops)| reachable_recurse(*target, ops, &maps).then_some(target))
         .sum()
+}
+
+// this short-circuits when it finds a solution, ends up being another factor of 2 faster or so on
+// my input
+fn reachable_recurse(
+    target: usize,
+    ops: &[usize],
+    maps: &[fn(usize, usize) -> Option<usize>],
+) -> bool {
+    let (&last, rest) = ops.split_last().expect("should have at least one operand");
+    if rest.is_empty() {
+        return target == last;
+    }
+    for f in maps {
+        if let Some(new_target) = f(target, last) {
+            if reachable_recurse(new_target, rest, maps) {
+                return true;
+            }
+        }
+    }
+    return false;
 }
 
 fn reachable<F, const N: usize>(target: usize, ops: &[usize], maps: [F; N]) -> bool
