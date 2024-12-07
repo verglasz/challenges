@@ -57,47 +57,36 @@ where
         .fold(HashSet::from([target]), |set, n| {
             set.into_iter()
                 // m is a target we want to reach, see if it works with sums or muls etc
+                // so add as targets the ones we need to reach m by combining it with n
+                // in all possible ways (if a + n = m, then a is a target, if a * n = m, then a is a target etc)
                 .flat_map(|m| maps.iter().flat_map(move |f| f(m, n)))
                 .collect()
         })
         .contains(&first)
 }
 
-fn possibilities(ops: &[usize]) -> HashSet<usize> {
-    let mut ops = ops.iter().copied();
-    let fst = ops.next().unwrap();
-    ops.fold(HashSet::from([fst]), |set, n| {
-        set.into_iter()
-            .flat_map(|m| [m + n, m * n].into_iter())
-            .collect()
-    })
-}
-
-fn concate(a: usize, b: usize) -> usize {
-    let mut x = b;
+fn mask10(n: usize) -> usize {
+    // a power of 10 which covers n, as in, has as many zeros as n has digits
+    // eg 123 -> 1000, 1234 -> 10000
+    let mut n = n;
     let mut pow = 1;
-    while x > 0 {
+    while n > 0 {
         pow *= 10;
-        x /= 10;
+        n /= 10;
     }
-    a * pow + b
-}
-
-fn more_possibilities(ops: &[usize]) -> HashSet<usize> {
-    let mut ops = ops.iter().copied();
-    let fst = ops.next().unwrap();
-    ops.fold(HashSet::from([fst]), |set, n| {
-        set.into_iter()
-            .flat_map(|m| [m + n, m * n, concate(m, n)].into_iter())
-            .collect()
-    })
+    pow
 }
 
 fn solve2(input: &Input) -> usize {
-    input
-        .iter()
-        .filter_map(|(target, ops)| more_possibilities(ops).contains(target).then_some(target))
-        .sum()
+    let maps = [
+        |target, n| (target >= n).then_some(target - n),
+        |target, n| (target % n == 0).then_some(target / n),
+        |target, n| {
+            let mask = mask10(n);
+            (target % mask == n).then_some(target / mask)
+        },
+    ];
+    solve(input, maps)
 }
 
 #[cfg(test)]
