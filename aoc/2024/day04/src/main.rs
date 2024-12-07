@@ -1,7 +1,4 @@
-use utils::{
-    get_stdinput,
-    grid::{Delta, Point},
-};
+use utils::{get_stdinput, grid::Dir};
 
 fn main() {
     let input = get_stdinput();
@@ -24,54 +21,9 @@ fn parse(lines: impl Iterator<Item = impl AsRef<str>>) -> Input {
     input
 }
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-enum Dir {
-    N,
-    NE,
-    E,
-    SE,
-    S,
-    SW,
-    W,
-    NW,
-}
-
-impl Dir {
-    pub const ALL: [Dir; 8] = [
-        Dir::N,
-        Dir::NE,
-        Dir::E,
-        Dir::SE,
-        Dir::S,
-        Dir::SW,
-        Dir::W,
-        Dir::NW,
-    ];
-
-    pub const CROSS: [Dir; 4] = [Dir::N, Dir::E, Dir::S, Dir::W];
-
-    fn to_offset(&self) -> (isize, isize) {
-        match self {
-            Dir::N => (0, -1),
-            Dir::NE => (1, -1),
-            Dir::E => (1, 0),
-            Dir::SE => (1, 1),
-            Dir::S => (0, 1),
-            Dir::SW => (-1, 1),
-            Dir::W => (-1, 0),
-            Dir::NW => (-1, -1),
-        }
-    }
-
-    fn to_delta(&self) -> Delta<isize> {
-        let (dx, dy) = self.to_offset();
-        Delta::new(dx, dy)
-    }
-}
-
 mod locals {
     use super::Input;
-    use utils::grid::{Delta, Point};
+    use utils::grid::*;
     pub type D = Delta<isize>;
     pub type P = Point<usize>;
     pub fn getp(input: &Input, p: P) -> Option<u8> {
