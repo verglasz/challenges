@@ -1,3 +1,5 @@
+use std::collections::HashSet;
+
 use utils::get_stdinput;
 
 fn main() {
@@ -11,7 +13,7 @@ fn main() {
 
 type PageNo = u8;
 type Rule = (PageNo, PageNo);
-type Rules = Vec<Rule>;
+type Rules = HashSet<Rule>;
 type Update = Vec<PageNo>;
 type Updates = Vec<Update>;
 type Input = (Rules, Updates);
@@ -87,12 +89,14 @@ fn solve2(input: &mut Input) -> usize {
 }
 
 fn fix(u: &mut Update, rules: &Rules) {
-    u.sort_by(|a, b| {
-        rules
-            .iter()
-            .find(|(fst, snd)| a == fst && b == snd)
-            .map(|_| std::cmp::Ordering::Less)
-            .unwrap_or(std::cmp::Ordering::Equal)
+    u.sort_by(|&a, &b| {
+        if rules.contains(&(a, b)) {
+            std::cmp::Ordering::Less
+        } else if rules.contains(&(b, a)) {
+            std::cmp::Ordering::Greater
+        } else {
+            std::cmp::Ordering::Equal
+        }
     });
 }
 
