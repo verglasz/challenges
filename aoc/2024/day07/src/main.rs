@@ -92,4 +92,18 @@ mod tests {
         let input = parse(input.lines());
         assert_eq!(solve2(&input), 11387);
     }
+
+    #[test]
+    fn input1() {
+        let input = include_str!("../input");
+        let input = parse(input.lines());
+        assert_eq!(solve1(&input), 1298300076754);
+    }
+
+    #[test]
+    fn input2() {
+        let input = include_str!("../input");
+        let input = parse(input.lines());
+        assert_eq!(solve2(&input), 248427118972289);
+    }
 }
