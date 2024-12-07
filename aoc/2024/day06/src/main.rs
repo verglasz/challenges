@@ -128,7 +128,10 @@ fn solve2_a(input: &Input) -> usize {
     *input.get_mut(pos).expect("start should be in bounds") = b'X';
     let mut dir = Dir::N;
     let mut loops = HashSet::new();
-    let mut collisions = HashSet::new();
+    let mut collisions = HashSet::new(); // keep the collisions so far
+                                         // to shorten the time we need to spend
+                                         // retracing the path while checking for loops
+                                         // (it does improve perf)
     loop {
         let next = pos.wrapping_add_signed(dir.to_delta());
         match input.get(next) {
@@ -142,7 +145,7 @@ fn solve2_a(input: &Input) -> usize {
                 dir = dir.clockwise_cross();
             }
             Some(b'X') => {
-                // advance
+                // already visited (and presumably tested), advance
                 pos = next;
                 *input.get_mut(pos).expect("next should be in bounds") = b'X';
             }
