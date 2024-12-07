@@ -11,7 +11,7 @@ fn main() {
     println!("sol2: {p2:?}");
 }
 type Input = Vec<Calib>;
-type Calib = (isize, Vec<isize>);
+type Calib = (usize, Vec<usize>);
 
 fn parse(lines: impl Iterator<Item = impl AsRef<str>>) -> Input {
     lines
@@ -31,14 +31,39 @@ fn parse_calib(s: impl AsRef<str>) -> Calib {
     (target, operands)
 }
 
-fn solve1(input: &Input) -> isize {
+fn solve1(input: &Input) -> usize {
+    let maps = [
+        |target, n| (target >= n).then_some(target - n),
+        |target, n| (target % n == 0).then_some(target / n),
+    ];
+    solve(input, maps)
+}
+
+fn solve<const N: usize>(input: &Input, maps: [fn(usize, usize) -> Option<usize>; N]) -> usize {
     input
         .iter()
-        .filter_map(|(target, ops)| possibilities(ops).contains(target).then_some(target))
+        .filter_map(|(target, ops)| reachable(*target, ops, maps).then_some(target))
         .sum()
 }
 
-fn possibilities(ops: &[isize]) -> HashSet<isize> {
+fn reachable<F, const N: usize>(target: usize, ops: &[usize], maps: [F; N]) -> bool
+where
+    F: Fn(usize, usize) -> Option<usize>,
+{
+    let (first, ops) = ops.split_first().expect("should have at least one operand");
+    ops.iter()
+        .rev()
+        .copied()
+        .fold(HashSet::from([target]), |set, n| {
+            set.into_iter()
+                // m is a target we want to reach, see if it works with sums or muls etc
+                .flat_map(|m| maps.iter().flat_map(move |f| f(m, n)))
+                .collect()
+        })
+        .contains(&first)
+}
+
+fn possibilities(ops: &[usize]) -> HashSet<usize> {
     let mut ops = ops.iter().copied();
     let fst = ops.next().unwrap();
     ops.fold(HashSet::from([fst]), |set, n| {
@@ -48,7 +73,7 @@ fn possibilities(ops: &[isize]) -> HashSet<isize> {
     })
 }
 
-fn concate(a: isize, b: isize) -> isize {
+fn concate(a: usize, b: usize) -> usize {
     let mut x = b;
     let mut pow = 1;
     while x > 0 {
@@ -58,7 +83,7 @@ fn concate(a: isize, b: isize) -> isize {
     a * pow + b
 }
 
-fn more_possibilities(ops: &[isize]) -> HashSet<isize> {
+fn more_possibilities(ops: &[usize]) -> HashSet<usize> {
     let mut ops = ops.iter().copied();
     let fst = ops.next().unwrap();
     ops.fold(HashSet::from([fst]), |set, n| {
@@ -68,7 +93,7 @@ fn more_possibilities(ops: &[isize]) -> HashSet<isize> {
     })
 }
 
-fn solve2(input: &Input) -> isize {
+fn solve2(input: &Input) -> usize {
     input
         .iter()
         .filter_map(|(target, ops)| more_possibilities(ops).contains(target).then_some(target))
