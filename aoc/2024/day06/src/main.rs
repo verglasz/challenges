@@ -1,4 +1,4 @@
-use utils::get_stdinput;
+use utils::{get_stdinput, grid::VecMat};
 
 fn main() {
     let input = get_stdinput();
@@ -8,10 +8,14 @@ fn main() {
     let p2 = solve2(&parsed);
     println!("sol2: {p2:?}");
 }
-type Input = ();
+type Input = VecMat<u8>;
 
 fn parse(lines: impl Iterator<Item = impl AsRef<str>>) -> Input {
-    lines;
+    let data = lines
+        .filter(|s| !s.as_ref().trim().is_empty())
+        .map(|l| l.as_ref().trim().as_bytes().to_vec())
+        .collect();
+    Input::new(data).expect("input should be grid map")
 }
 
 fn solve1(input: &Input) -> () {}
