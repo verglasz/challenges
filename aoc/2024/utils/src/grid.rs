@@ -1,5 +1,5 @@
 use core::fmt;
-use std::ops::Neg;
+use std::{collections::HashSet, ops::Neg};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Point<T> {
@@ -21,7 +21,7 @@ impl<T> TryFrom<Vec<Vec<T>>> for VecMat<T> {
 }
 
 impl fmt::Display for VecMat<u8> {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
         for row in &self.data {
             for &c in row {
                 write!(f, "{}", c as char)?;
@@ -33,6 +33,55 @@ impl fmt::Display for VecMat<u8> {
 }
 
 impl<T> VecMat<T> {
+    pub fn fmt_highlight(
+        &self,
+        f: &mut fmt::Formatter<'_>,
+        highlights: &HashSet<Point<usize>>,
+    ) -> fmt::Result
+    where
+        T: fmt::Display,
+    {
+        for (i, row) in self.data.iter().enumerate() {
+            for (j, c) in row.iter().enumerate() {
+                let p = Point::new(j, i);
+                if highlights.contains(&p) {
+                    write!(f, "\x1b[1;31m{c}\x1b[0m")?;
+                } else {
+                    write!(f, "{c}")?;
+                }
+            }
+            writeln!(f)?;
+        }
+        Ok(())
+    }
+
+    pub fn highlighted<'a, 'b: 'a>(
+        &'a self,
+        highlights: &'b HashSet<Point<usize>>,
+    ) -> impl fmt::Display + 'a
+    where
+        T: fmt::Display,
+    {
+        struct Highlighted<'a, T> {
+            grid: &'a VecMat<T>,
+            highlights: &'a HashSet<Point<usize>>,
+        }
+
+        impl<T> fmt::Display for Highlighted<'_, T>
+        where
+            T: fmt::Display,
+        {
+            fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+                self.grid.fmt_highlight(f, self.highlights)
+            }
+        }
+
+        Highlighted {
+            grid: self,
+            highlights,
+        }
+    }
+
     pub fn new(data: Vec<Vec<T>>) -> Result<Self, Vec<Vec<T>>> {
         let rows = data.len();
         if rows != 0 {

@@ -96,11 +96,23 @@ fn is_loop(input: &Input, mut pos: Point<usize>, mut dir: Dir, mut hits: ObstHit
 }
 
 fn solve2(input: &Input) -> usize {
+    // there should be a different (linear) solution rather than current quadratic,
+    // roughly we can mark the path and the steps leading to the path with
+    // the direction taken and then check for loops by going through our path and
+    // seeing if we hit a place where turning would make our direction
+    // the same as another one... but so far i haven't tried implementing it
     solve2_a(input)
 }
 
 #[allow(dead_code)]
 fn solve2_b(input: &Input) -> usize {
+    // stupid algo, just brute force all possible obstacles
+    // (literally everywhere in the map)
+    // and check if they make a loop.
+    // a simple improvement is to walk the path once
+    // (we already do in part1 anyway)
+    // and only put obstacles there but this is what solve2_a does plus more
+    // so whatever
     let mut input = input.clone();
     let start = input.find(&b'^').expect("should have a start point");
     *input.get_mut(start).expect("start should be in bounds") = b'.';
@@ -123,6 +135,8 @@ fn solve2_b(input: &Input) -> usize {
 }
 
 fn solve2_a(input: &Input) -> usize {
+    // we walk the path, try to put obstacles where we can and see if continuing to walk
+    // gives a loop
     let mut input = input.clone();
     let mut pos = input.find(&b'^').expect("should have a start point");
     *input.get_mut(pos).expect("start should be in bounds") = b'X';
@@ -145,7 +159,8 @@ fn solve2_a(input: &Input) -> usize {
                 dir = dir.clockwise_cross();
             }
             Some(b'X') => {
-                // already visited (and presumably tested), advance
+                // already visited (and so we can't put an obstacle there,
+                // as that would change our path so far!), advance
                 pos = next;
                 *input.get_mut(pos).expect("next should be in bounds") = b'X';
             }
@@ -164,9 +179,6 @@ fn solve2_a(input: &Input) -> usize {
             _ => panic!("invalid input"),
         }
     }
-    // for p in &loops {
-    //     *input.get_mut(*p).expect("loop should be in bounds") = b'O';
-    // }
     loops.len()
 }
 
