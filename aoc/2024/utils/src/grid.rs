@@ -1,4 +1,5 @@
 use core::fmt;
+use std::ops::Neg;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Point<T> {
@@ -9,6 +10,14 @@ pub struct Point<T> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VecMat<T> {
     data: Vec<Vec<T>>,
+}
+
+impl<T> TryFrom<Vec<Vec<T>>> for VecMat<T> {
+    type Error = Vec<Vec<T>>;
+
+    fn try_from(value: Vec<Vec<T>>) -> Result<Self, Self::Error> {
+        Self::new(value)
+    }
 }
 
 impl fmt::Display for VecMat<u8> {
@@ -53,6 +62,15 @@ impl<T> VecMat<T> {
 
     pub fn shape(&self) -> (usize, usize) {
         (self.rows(), self.cols())
+    }
+
+    pub fn iter_pos(&self) -> impl Iterator<Item = (Point<usize>, &T)> {
+        (0..self.rows()).flat_map(move |y| {
+            (0..self.cols()).map(move |x| {
+                let p = Point::new(x, y);
+                (p, self.get(p).unwrap())
+            })
+        })
     }
 
     pub fn is_empty(&self) -> bool {
@@ -140,6 +158,14 @@ pub struct Delta<T> {
     pub dy: T,
 }
 
+impl<T: Neg> Neg for Delta<T> {
+    type Output = Delta<T::Output>;
+
+    fn neg(self) -> Self::Output {
+        Delta::new(-self.dx, -self.dy)
+    }
+}
+
 impl<T> Point<T> {
     pub fn new(x: T, y: T) -> Self {
         Self { x, y }
@@ -172,6 +198,13 @@ impl Point<usize> {
 
     pub fn as_in_bounds(&self, (width, height): (usize, usize)) -> Option<Self> {
         self.in_bounds((width, height)).then_some(*self)
+    }
+
+    pub fn delta_to(&self, other: Self) -> Option<Delta<isize>> {
+        Some(Delta::new(
+            (other.x as isize).checked_sub(self.x as isize)?,
+            (other.y as isize).checked_sub(self.y as isize)?,
+        ))
     }
 }
 

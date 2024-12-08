@@ -1,5 +1,6 @@
+use std::collections::{hash_map::Entry, HashMap, HashSet};
 
-use utils::get_stdinput;
+use utils::{get_stdinput, grid::VecMat};
 
 fn main() {
     let input = get_stdinput();
@@ -9,15 +10,84 @@ fn main() {
     let p2 = solve2(&parsed);
     println!("sol2: {p2:?}");
 }
-type Input = ();
+type Input = VecMat<u8>;
 
 fn parse(lines: impl Iterator<Item = impl AsRef<str>>) -> Input {
-    lines;
+    lines
+        .filter(|s| !s.as_ref().trim().is_empty())
+        .map(|l| l.as_ref().trim().as_bytes().to_vec())
+        .collect::<Vec<_>>()
+        .try_into()
+        .expect("input should be grid map")
 }
 
-fn solve1(input: &Input) -> () {}
+fn solve1(input: &Input) -> usize {
+    let mut stations = HashMap::<_, Vec<_>>::new();
+    let mut antinodes = HashSet::new();
+    for (p, &c) in input.iter_pos() {
+        if c == b'.' {
+            continue;
+        }
+        let mut entry = match stations.entry(c) {
+            Entry::Occupied(e) => e,
+            Entry::Vacant(e) => {
+                e.insert(vec![p]);
+                continue;
+            }
+        };
+        let others = entry.get_mut();
+        for &o in &*others {
+            let delta = p.delta_to(o).expect("reasonable distances");
+            let a1 = o.wrapping_add_signed(delta);
+            if a1.in_bounds(input.shape()) {
+                antinodes.insert(a1);
+            }
+            let a2 = p.wrapping_add_signed(-delta);
+            if a2.in_bounds(input.shape()) {
+                antinodes.insert(a2);
+            }
+        }
+        others.push(p);
+    }
+    antinodes.len()
+}
 
-fn solve2(input: &Input) -> () {}
+fn solve2(input: &Input) -> usize {
+    let mut stations = HashMap::<_, Vec<_>>::new();
+    let mut antinodes = HashSet::new();
+    for (p, &c) in input.iter_pos() {
+        if c == b'.' {
+            continue;
+        }
+        let mut entry = match stations.entry(c) {
+            Entry::Occupied(e) => e,
+            Entry::Vacant(e) => {
+                e.insert(vec![p]);
+                continue;
+            }
+        };
+        let others = entry.get_mut();
+        for &o in &*others {
+            let delta = p.delta_to(o).expect("reasonable distances");
+            let mut antinode1 = p;
+            while antinode1.in_bounds(input.shape()) {
+                antinodes.insert(antinode1);
+                antinode1 = antinode1.wrapping_add_signed(delta);
+            }
+            let mut antinode2 = p;
+            while antinode2.in_bounds(input.shape()) {
+                antinodes.insert(antinode2);
+                antinode2 = antinode2.wrapping_add_signed(-delta);
+            }
+        }
+        others.push(p);
+    }
+    let mut i = input.clone();
+    for &p in &antinodes {
+        *i.get_mut(p).unwrap() = b'#';
+    }
+    antinodes.len()
+}
 
 #[cfg(test)]
 mod tests {
@@ -27,16 +97,27 @@ mod tests {
     fn test1() {
         let input = include_str!("../test");
         let input = parse(input.lines());
-        assert_eq!(solve1(&input), ());
+        assert_eq!(solve1(&input), 14);
     }
 
     #[test]
     fn test2() {
         let input = include_str!("../test");
         let input = parse(input.lines());
-        assert_eq!(solve2(&input), ());
+        assert_eq!(solve2(&input), 34);
+    }
+
+    #[test]
+    fn input1() {
+        let input = include_str!("../input");
+        let input = parse(input.lines());
+        assert_eq!(solve1(&input), 413);
+    }
+
+    #[test]
+    fn input2() {
+        let input = include_str!("../input");
+        let input = parse(input.lines());
+        assert_eq!(solve2(&input), 1417);
     }
 }
-
-
-    
