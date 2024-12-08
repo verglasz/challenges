@@ -1,6 +1,9 @@
 use std::collections::{hash_map::Entry, HashMap, HashSet};
 
-use utils::{get_stdinput, grid::VecMat};
+use utils::{
+    get_stdinput,
+    grid::{Point, VecMat},
+};
 
 fn main() {
     let input = get_stdinput();
@@ -10,21 +13,30 @@ fn main() {
     let p2 = solve2(&parsed);
     println!("sol2: {p2:?}");
 }
-type Input = VecMat<u8>;
+type Input = (Shape, Vec<Station>);
+type Shape = (usize, usize);
+type Station = (Point<usize>, u8);
 
 fn parse(lines: impl Iterator<Item = impl AsRef<str>>) -> Input {
-    lines
+    let map: VecMat<u8> = lines
         .filter(|s| !s.as_ref().trim().is_empty())
         .map(|l| l.as_ref().trim().as_bytes().to_vec())
         .collect::<Vec<_>>()
         .try_into()
-        .expect("input should be grid map")
+        .expect("input should be grid map");
+    (
+        map.shape(),
+        map.iter_pos()
+            .filter_map(|(p, &s)| (s != b'.').then_some((p, s)))
+            .collect(),
+    )
 }
 
 fn solve1(input: &Input) -> usize {
+    let &(shape, ref s_pos) = input;
     let mut stations = HashMap::<_, Vec<_>>::new();
     let mut antinodes = HashSet::new();
-    for (p, &c) in input.iter_pos() {
+    for &(p, c) in s_pos {
         if c == b'.' {
             continue;
         }
@@ -39,11 +51,11 @@ fn solve1(input: &Input) -> usize {
         for &o in &*others {
             let delta = p.delta_to(o).expect("reasonable distances");
             let a1 = o.wrapping_add_signed(delta);
-            if a1.in_bounds(input.shape()) {
+            if a1.in_bounds(shape) {
                 antinodes.insert(a1);
             }
             let a2 = p.wrapping_add_signed(-delta);
-            if a2.in_bounds(input.shape()) {
+            if a2.in_bounds(shape) {
                 antinodes.insert(a2);
             }
         }
@@ -53,9 +65,10 @@ fn solve1(input: &Input) -> usize {
 }
 
 fn solve2(input: &Input) -> usize {
+    let &(shape, ref s_pos) = input;
     let mut stations = HashMap::<_, Vec<_>>::new();
     let mut antinodes = HashSet::new();
-    for (p, &c) in input.iter_pos() {
+    for &(p, c) in s_pos {
         if c == b'.' {
             continue;
         }
@@ -70,21 +83,17 @@ fn solve2(input: &Input) -> usize {
         for &o in &*others {
             let delta = p.delta_to(o).expect("reasonable distances");
             let mut antinode1 = p;
-            while antinode1.in_bounds(input.shape()) {
+            while antinode1.in_bounds(shape) {
                 antinodes.insert(antinode1);
                 antinode1 = antinode1.wrapping_add_signed(delta);
             }
             let mut antinode2 = p;
-            while antinode2.in_bounds(input.shape()) {
+            while antinode2.in_bounds(shape) {
                 antinodes.insert(antinode2);
                 antinode2 = antinode2.wrapping_add_signed(-delta);
             }
         }
         others.push(p);
-    }
-    let mut i = input.clone();
-    for &p in &antinodes {
-        *i.get_mut(p).unwrap() = b'#';
     }
     antinodes.len()
 }
