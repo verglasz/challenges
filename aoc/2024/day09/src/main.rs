@@ -1,6 +1,9 @@
 use std::collections::VecDeque;
 
-use utils::get_stdinput;
+use utils::{
+    get_stdinput,
+    types::{Both, SumEither as _},
+};
 
 fn main() {
     let input = get_stdinput();
@@ -30,21 +33,50 @@ impl IdMap {
     fn new(blocks: Vec<(usize, usize, u8)>, free_space: Vec<(usize, u8)>) -> Self {
         Self { blocks, free_space }
     }
+
+    fn compact(&mut self) {
+        for block in self.blocks.iter_mut().rev() {
+            let (id, start, size) = block;
+            for (free_start, free_size) in self.free_space.iter_mut() {
+                if free_start > start {
+                    // we're done
+                    break;
+                }
+                if free_size >= size {
+                    *start = *free_start;
+                    *free_start += *size as usize;
+                    *free_size -= *size;
+                    break;
+                }
+            }
+        }
+    }
+
+    fn checksum(&self) -> usize {
+        self.blocks
+            .iter()
+            .map(|(id, start_pos, size)| checksum_for(*id, *start_pos, *size as usize))
+            .sum()
+    }
+}
+fn checksum_for(id: usize, start_pos: usize, size: usize) -> usize {
+    id * (2 * start_pos + size - 1) * size / 2
 }
 
 impl Diskmap {
     fn to_idmap(&self) -> IdMap {
-        let data: (Vec<_>, Vec<_>) = self
+        let data: Both<_, _> = self
             .data
             .iter()
             .enumerate()
-            .scan(0, |&mut pos, (i, &b)| {
+            .scan(0, |pos, (i, &b)| {
                 let id = (i % 2 == 0).then_some(self.base_id + i / 2);
-                pos += b as usize;
-                id.map(|id| (id, pos, b)).ok_or((pos, b))
+                let p = *pos;
+                *pos += b as usize;
+                Some(id.map(|id| (id, p, b)).ok_or((p, b)).either())
             })
             .collect();
-        IdMap::new(data)
+        IdMap::new(data.0, data.1)
     }
 
     fn new(mut data: VecDeque<u8>) -> Self {
@@ -58,16 +90,13 @@ impl Diskmap {
     }
 
     fn compact_checksum(mut self) -> usize {
-        fn sum_for(id: usize, start_pos: usize, size: usize) -> usize {
-            id * (2 * start_pos + size - 1) * size / 2
-        }
         let mut sum = 0;
         let mut pos = 0;
         while let Some((block_len, id)) = self.pop_first() {
             if let Some(id) = id {
                 // data block, count it
                 println!("id: {}, start_pos: {}, len: {}", id, pos, block_len);
-                sum += sum_for(id, pos, block_len as usize);
+                sum += checksum_for(id, pos, block_len as usize);
                 pos += block_len as usize;
             } else {
                 // empty block, let's fill it
@@ -75,7 +104,7 @@ impl Diskmap {
                 let (popped, remaining) = self.pop_blocks(block_len as usize);
                 for (block_len, id) in popped {
                     println!("   id: {}, start_pos: {}, len: {}", id, pos, block_len);
-                    sum += sum_for(id, pos, block_len as usize);
+                    sum += checksum_for(id, pos, block_len as usize);
                     pos += block_len as usize;
                 }
                 if remaining > 0 {
@@ -147,7 +176,12 @@ fn solve1(input: &Input) -> usize {
     input.compact_checksum()
 }
 
-fn solve2(input: &Input) -> () {}
+fn solve2(input: &Input) -> usize {
+    let mut data = input.to_idmap();
+    data.compact();
+
+    data.checksum()
+}
 
 #[cfg(test)]
 mod tests {
@@ -197,6 +231,13 @@ mod tests {
     fn test2() {
         let input = include_str!("../test");
         let input = parse(input.lines());
-        assert_eq!(solve2(&input), ());
+        assert_eq!(solve2(&input), 2858);
+    }
+
+    fn input2() {
+        let input = include_str!("../input");
+        let input = parse(input.lines());
+        // assert_eq!(solve2(&input), 0);
+        assert!(solve2(&input) < 8553014718259);
     }
 }

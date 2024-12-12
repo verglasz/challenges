@@ -2,6 +2,7 @@ use hashbrown::{Equivalent, HashMap};
 use std::{borrow::Borrow, hash::Hash, io::stdin};
 
 pub mod grid;
+pub mod types;
 
 pub fn get_stdinput() -> impl Iterator<Item = String> {
     stdin().lines().map(|s| s.expect("input string unparsable"))
