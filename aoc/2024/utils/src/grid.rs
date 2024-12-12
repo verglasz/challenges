@@ -55,6 +55,15 @@ impl<T> VecMat<T> {
         Ok(())
     }
 
+    pub fn filled(shape: (usize, usize), val: &T) -> Self
+    where
+        T: Clone,
+    {
+        let (rows, cols) = shape;
+        let data = vec![vec![val.clone(); cols]; rows];
+        Self { data }
+    }
+
     pub fn highlighted<'a, 'b: 'a>(
         &'a self,
         highlights: &'b HashSet<Point<usize>>,
@@ -255,6 +264,14 @@ impl Point<usize> {
             (other.y as isize).checked_sub(self.y as isize)?,
         ))
     }
+
+    pub fn neighbours(&self) -> impl Iterator<Item = Self> + '_ {
+        Dir::CROSS.iter().map(move |&dir| self.neighbour(dir))
+    }
+
+    pub fn neighbour(&self, dir: Dir) -> Self {
+        self.wrapping_add_signed(dir.to_delta())
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -282,6 +299,8 @@ impl Dir {
     ];
 
     pub const CROSS: [Dir; 4] = [Dir::N, Dir::E, Dir::S, Dir::W];
+    pub const HORIZONTAL: [Dir; 2] = [Dir::E, Dir::W];
+    pub const VERTICAL: [Dir; 2] = [Dir::N, Dir::S];
 
     pub fn to_offset(&self) -> (isize, isize) {
         match self {
