@@ -1,5 +1,9 @@
 use core::fmt;
-use std::{collections::HashSet, ops::Neg};
+use std::{
+    collections::HashSet,
+    mem,
+    ops::{Index, IndexMut, Neg},
+};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Point<T> {
@@ -10,6 +14,21 @@ pub struct Point<T> {
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct VecMat<T> {
     data: Vec<Vec<T>>,
+}
+
+impl<T> IndexMut<Point<usize>> for VecMat<T> {
+    fn index_mut(&mut self, index: Point<usize>) -> &mut Self::Output {
+        self.get_mut(index)
+            .expect("indexed point must be in bounds")
+    }
+}
+
+impl<T> Index<Point<usize>> for VecMat<T> {
+    type Output = T;
+
+    fn index(&self, index: Point<usize>) -> &Self::Output {
+        self.get(index).expect("indexed point must be in bounds")
+    }
 }
 
 impl<T> TryFrom<Vec<Vec<T>>> for VecMat<T> {
@@ -106,6 +125,22 @@ impl<T> VecMat<T> {
         Ok(Self { data })
     }
 
+    pub fn for_each(&self, mut f: impl FnMut(Point<usize>, &T)) {
+        for (y, row) in self.data.iter().enumerate() {
+            for (x, cell) in row.iter().enumerate() {
+                f(Point::new(x, y), cell);
+            }
+        }
+    }
+
+    pub fn for_each_mut(&mut self, mut f: impl FnMut(Point<usize>, &mut T)) {
+        for (y, row) in self.data.iter_mut().enumerate() {
+            for (x, cell) in row.iter_mut().enumerate() {
+                f(Point::new(x, y), cell);
+            }
+        }
+    }
+
     pub fn cols(&self) -> usize {
         if self.is_empty() {
             0
@@ -133,6 +168,10 @@ impl<T> VecMat<T> {
 
     pub fn is_empty(&self) -> bool {
         self.data.is_empty()
+    }
+
+    pub fn set(&mut self, p: Point<usize>, val: T) -> T {
+        mem::replace(self.get_mut(p).expect("should be in bounds"), val)
     }
 
     pub fn get(&self, p: Point<usize>) -> Option<&T> {
