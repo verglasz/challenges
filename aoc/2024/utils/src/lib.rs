@@ -1,6 +1,7 @@
 use hashbrown::{Equivalent, HashMap};
 use std::{borrow::Borrow, hash::Hash, io::stdin};
 
+pub mod decimals;
 pub mod grid;
 pub mod types;
 
@@ -29,8 +30,12 @@ impl<V: Hash + Eq> Counter<V> {
     //     *self.0.entry_ref(el).or_insert(0) += 1;
     // }
 
-    pub fn add(&mut self, el: V) {
-        *self.0.entry(el).or_insert(0) += 1;
+    pub fn add_one(&mut self, el: V) {
+        self.add(el, 1)
+    }
+
+    pub fn add(&mut self, el: V, count: usize) {
+        *self.0.entry(el).or_insert(0) += count;
     }
 
     pub fn get<'b, Q: ?Sized>(&self, el: &'b Q) -> Option<usize>
@@ -48,6 +53,14 @@ impl<V: Hash + Eq> Counter<V> {
     {
         self.get(el).unwrap_or(0)
     }
+
+    pub fn iter(&self) -> impl Iterator<Item = (&V, &usize)> {
+        self.0.iter()
+    }
+
+    pub fn counts(&self) -> impl Iterator<Item = usize> + '_ {
+        self.iter().map(|(_, &c)| c)
+    }
 }
 
 // impl<'b, V: Hash +Eq, Q> FromIterator<&'b Q> for Counter<V>
@@ -63,7 +76,7 @@ impl<V: Hash + Eq> Counter<V> {
 impl<'b, V: Hash + Eq> FromIterator<V> for Counter<V> {
     fn from_iter<T: IntoIterator<Item = V>>(iter: T) -> Self {
         let mut counts = Self::new();
-        iter.into_iter().for_each(|el| counts.add(el));
+        iter.into_iter().for_each(|el| counts.add_one(el));
         counts
     }
 }
