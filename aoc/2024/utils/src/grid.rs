@@ -274,6 +274,14 @@ impl<T> Delta<T> {
         Self { dx, dy }
     }
 }
+impl Point<isize> {
+    pub fn add(&self, delta: Delta<isize>) -> Self {
+        Self {
+            x: self.x + delta.dx,
+            y: self.y + delta.dy,
+        }
+    }
+}
 
 impl Point<usize> {
     pub fn wrapping_add_signed(&self, d: Delta<isize>) -> Self {

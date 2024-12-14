@@ -21,6 +21,18 @@ struct Problem {
     prize: Point<isize>,
 }
 
+impl Problem {
+    fn new(a: Delta<isize>, b: Delta<isize>, prize: Point<isize>) -> Self {
+        Self { a, b, prize }
+    }
+
+    fn to_sys(&self) -> Sys {
+        let eq1 = Eqn::new(self.a.dx, self.b.dx, self.prize.x);
+        let eq2 = Eqn::new(self.a.dy, self.b.dy, self.prize.y);
+        Sys::new(eq1, eq2)
+    }
+}
+
 /// represents the linear equation `a*x + b*y = c`
 #[derive(Debug, Clone, Copy)]
 struct Eqn {
@@ -41,6 +53,14 @@ impl Eqn {
             c: self.c * factor,
         }
     }
+
+    fn diff(&self, other: Self) -> Self {
+        Self {
+            a: self.a - other.a,
+            b: self.b - other.b,
+            c: self.c - other.c,
+        }
+    }
 }
 
 /// represents a system of two linear equations
@@ -57,8 +77,32 @@ impl Sys {
     fn solve(&self) -> Option<Point<isize>> {
         let (e1, e2) = self.eqns;
         let a_gcd = gcd(e1.a, e2.a);
-        let mul1 = e1.a / a_gcd;
-        let mul2 = e2.a / a_gcd;
+        let mut mul1 = e1.a / a_gcd;
+        // if e1.a < 0 ^ e2.a < 0 {
+        //     mul1 = -mul1;
+        // }
+        let mut mul2 = e2.a / a_gcd;
+        // if e1.a < 0 ^ e2.a < 0 {
+        //     mul2 = -mul2;
+        // }
+        // println!("e1: {:?}, e2: {:?}", e1, e2);
+        let e1 = e1.scale(mul2);
+        let e2 = e2.scale(mul1);
+        let e = e1.diff(e2);
+        // println!("e1: {:?}, e2: {:?}, gcd: {}, e: {:?}", e1, e2, a_gcd, e);
+        if e.b == 0 {
+            return None;
+        }
+        if e.c % e.b != 0 {
+            return None;
+        }
+        let y = e.c / e.b;
+        let k = (e1.c - e1.b * y);
+        if k % e1.a != 0 {
+            return None;
+        }
+        let x = k / e1.a;
+        Some(Point::new(x, y))
     }
 }
 
@@ -140,12 +184,37 @@ fn parse(mut lines: impl Iterator<Item = impl AsRef<str>>) -> Input {
 }
 
 fn solve1(input: &Input) -> usize {
-    println!("{:?}", input);
-    0
+    let mut total = 0;
+    for problem in input {
+        let sys = problem.to_sys();
+        // println!("problem: {:?}", problem);
+        if let Some(Point { x, y }) = sys.solve() {
+            // println!("a: {x}, b: {y}");
+            if x < 0 || y < 0 || x > 100 || y > 100 {
+                continue;
+            }
+            total += 3 * x + 1 * y;
+        }
+    }
+    total.try_into().expect("total is usize")
 }
 
 fn solve2(input: &Input) -> usize {
-    0
+    let mut total = 0;
+    let d = Delta::new(10000000000000, 10000000000000);
+    for mut problem in input.iter().cloned() {
+        problem.prize = problem.prize.add(d);
+        let sys = problem.to_sys();
+        // println!("problem: {:?}", problem);
+        if let Some(Point { x, y }) = sys.solve() {
+            // println!("a: {x}, b: {y}");
+            if x < 0 || y < 0 {
+                continue;
+            }
+            total += 3 * x + 1 * y;
+        }
+    }
+    total.try_into().expect("total is usize")
 }
 
 #[cfg(test)]
@@ -163,6 +232,6 @@ mod tests {
     fn test2() {
         let input = include_str!("../test");
         let input = parse(input.lines());
-        assert_eq!(solve2(&input), 0);
+        assert!(solve2(&input) > 0);
     }
 }
