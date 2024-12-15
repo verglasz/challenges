@@ -1,6 +1,7 @@
 use core::fmt;
 use std::{
     collections::HashSet,
+    fmt::Display,
     mem,
     ops::{Index, IndexMut, Neg},
 };
@@ -41,19 +42,16 @@ impl<T> TryFrom<Vec<Vec<T>>> for VecMat<T> {
     }
 }
 
-impl fmt::Display for VecMat<u8> {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> std::fmt::Result {
-        for row in &self.data {
-            for &c in row {
-                write!(f, "{}", c as char)?;
-            }
-            writeln!(f)?;
-        }
-        Ok(())
-    }
+pub struct MatDisplayWith<'a, T, F> {
+    grid: &'a VecMat<T>,
+    f: F,
 }
 
-impl<T> VecMat<T> {
+impl<'a, T, F> MatDisplayWith<'a, T, F> {
+    pub fn new(grid: &'a VecMat<T>, f: F) -> Self {
+        Self { grid, f }
+    }
+
     pub fn fmt_highlight(
         &self,
         f: &mut fmt::Formatter<'_>,
@@ -62,10 +60,9 @@ impl<T> VecMat<T> {
     where
         T: fmt::Display,
     {
-        for (i, row) in self.data.iter().enumerate() {
+        for (i, row) in self.grid.data.iter().enumerate() {
             for (j, c) in row.iter().enumerate() {
-                let p = Point::new(j, i);
-                if highlights.contains(&p) {
+                if highlights.contains(&Point::new(j, i)) {
                     write!(f, "\x1b[1;31m{c}\x1b[0m")?;
                 } else {
                     write!(f, "{c}")?;
@@ -74,6 +71,50 @@ impl<T> VecMat<T> {
             writeln!(f)?;
         }
         Ok(())
+    }
+}
+
+impl<T, F, U> Display for MatDisplayWith<'_, T, F>
+where
+    F: Fn(usize, usize, &T) -> U,
+    U: fmt::Display,
+{
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        for (i, row) in self.grid.data.iter().enumerate() {
+            for (j, c) in row.iter().enumerate() {
+                write!(f, "{}", (self.f)(j, i, c))?;
+            }
+            writeln!(f)?;
+        }
+        Ok(())
+    }
+}
+
+impl Display for VecMat<char> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        self.formatter_with(|_, _, c| *c).fmt(f)
+    }
+}
+
+impl Display for VecMat<u8> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        fn aschar(_: usize, _: usize, c: &u8) -> char {
+            *c as char
+        }
+        self.formatter_with(aschar).fmt(f)
+    }
+}
+
+impl<T> VecMat<T> {
+    pub fn formatter(&self) -> MatDisplayWith<'_, T, fn(usize, usize, &T) -> &T> {
+        MatDisplayWith::new(self, |_, _, c| c)
+    }
+
+    pub fn formatter_with<'a, F, U>(&'a self, f: F) -> MatDisplayWith<'a, T, F>
+    where
+        F: Fn(usize, usize, &T) -> U,
+    {
+        MatDisplayWith::new(self, f)
     }
 
     pub fn filled(shape: (usize, usize), val: &T) -> Self
@@ -102,7 +143,7 @@ impl<T> VecMat<T> {
             T: fmt::Display,
         {
             fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-                self.grid.fmt_highlight(f, self.highlights)
+                self.grid.formatter().fmt_highlight(f, self.highlights)
             }
         }
 
@@ -141,6 +182,10 @@ impl<T> VecMat<T> {
                 f(Point::new(x, y), cell);
             }
         }
+    }
+
+    pub fn iter_rows(&self) -> impl Iterator<Item = &[T]> {
+        self.data.iter().map(|row| row.as_slice())
     }
 
     pub fn cols(&self) -> usize {
@@ -365,6 +410,30 @@ impl Dir {
     pub const HORIZONTAL: [Dir; 2] = [Dir::E, Dir::W];
     pub const VERTICAL: [Dir; 2] = [Dir::N, Dir::S];
 
+    pub fn id(&self) -> u8 {
+        match self {
+            Dir::N => 0,
+            Dir::NE => 1,
+            Dir::E => 2,
+            Dir::SE => 3,
+            Dir::S => 4,
+            Dir::SW => 5,
+            Dir::W => 6,
+            Dir::NW => 7,
+        }
+    }
+
+    pub fn is_vertical(&self) -> bool {
+        matches!(self, Dir::N | Dir::S)
+    }
+    pub fn is_horizontal(&self) -> bool {
+        matches!(self, Dir::E | Dir::W)
+    }
+
+    pub fn from_id(id: u8) -> Option<Self> {
+        Self::ALL.get(id as usize).copied()
+    }
+
     pub fn to_offset(&self) -> (isize, isize) {
         match self {
             Dir::N => (0, -1),
@@ -378,56 +447,25 @@ impl Dir {
         }
     }
 
+    pub fn rotate_by(&self, n: isize) -> Self {
+        let id = (self.id() as isize + n).rem_euclid(8) as u8;
+        Self::from_id(id).unwrap()
+    }
+
     pub fn clockwise(&self) -> Self {
-        match self {
-            Dir::N => Dir::NE,
-            Dir::NE => Dir::E,
-            Dir::E => Dir::SE,
-            Dir::SE => Dir::S,
-            Dir::S => Dir::SW,
-            Dir::SW => Dir::W,
-            Dir::W => Dir::NW,
-            Dir::NW => Dir::N,
-        }
+        self.rotate_by(1)
     }
 
     pub fn counterclockwise(&self) -> Self {
-        match self {
-            Dir::N => Dir::NW,
-            Dir::NE => Dir::N,
-            Dir::E => Dir::NE,
-            Dir::SE => Dir::E,
-            Dir::S => Dir::SE,
-            Dir::SW => Dir::S,
-            Dir::W => Dir::SW,
-            Dir::NW => Dir::W,
-        }
+        self.rotate_by(-1)
     }
 
     pub fn clockwise_cross(&self) -> Self {
-        match self {
-            Dir::N => Dir::E,
-            Dir::E => Dir::S,
-            Dir::S => Dir::W,
-            Dir::W => Dir::N,
-            Dir::NE => Dir::SE,
-            Dir::SE => Dir::SW,
-            Dir::SW => Dir::NW,
-            Dir::NW => Dir::NE,
-        }
+        self.rotate_by(2)
     }
 
     pub fn counterclockwise_cross(&self) -> Self {
-        match self {
-            Dir::N => Dir::W,
-            Dir::W => Dir::S,
-            Dir::S => Dir::E,
-            Dir::E => Dir::N,
-            Dir::NE => Dir::NW,
-            Dir::NW => Dir::SW,
-            Dir::SW => Dir::SE,
-            Dir::SE => Dir::NE,
-        }
+        self.rotate_by(-2)
     }
 
     pub fn to_delta(&self) -> Delta<isize> {
@@ -439,5 +477,21 @@ impl Dir {
 impl<T> Into<Both<T, T>> for Point<T> {
     fn into(self) -> Both<T, T> {
         self.into_both()
+    }
+}
+
+impl Display for Dir {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        let c = match self {
+            Dir::N => '↑',
+            Dir::NE => '↗',
+            Dir::E => '→',
+            Dir::SE => '↘',
+            Dir::S => '↓',
+            Dir::SW => '↙',
+            Dir::W => '←',
+            Dir::NW => '↖',
+        };
+        write!(f, "{}", c)
     }
 }
