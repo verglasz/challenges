@@ -170,6 +170,12 @@ impl<L, R> Both<L, R> {
     }
 }
 
+impl<T, U> Into<(T, U)> for Both<T, U> {
+    fn into(self) -> (T, U) {
+        (self.0, self.1)
+    }
+}
+
 pub trait SumEither<L, R> {
     fn either(self) -> Either<L, R>;
 }

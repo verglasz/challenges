@@ -5,6 +5,8 @@ use std::{
     ops::{Index, IndexMut, Neg},
 };
 
+use crate::types::Both;
+
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Point<T> {
     pub x: T,
@@ -273,7 +275,21 @@ impl<T> Delta<T> {
     pub fn new(dx: T, dy: T) -> Self {
         Self { dx, dy }
     }
+
+    pub fn scale<U>(&self, factor: T) -> Delta<U>
+    where
+        T: Copy + std::ops::Mul<Output = U>,
+    {
+        Delta::new(self.dx * factor, self.dy * factor)
+    }
 }
+
+impl<T> Point<T> {
+    pub fn into_both(self) -> Both<T, T> {
+        Both(self.x, self.y)
+    }
+}
+
 impl Point<isize> {
     pub fn add(&self, delta: Delta<isize>) -> Self {
         Self {
@@ -417,5 +433,11 @@ impl Dir {
     pub fn to_delta(&self) -> Delta<isize> {
         let (dx, dy) = self.to_offset();
         Delta::new(dx, dy)
+    }
+}
+
+impl<T> Into<Both<T, T>> for Point<T> {
+    fn into(self) -> Both<T, T> {
+        self.into_both()
     }
 }
