@@ -61,16 +61,13 @@ fn successors(
     grid: &VecMat<bool>,
 ) -> impl IntoIterator<Item = ((Point<usize>, Dir), usize)> {
     let next = p.wrapping_add_signed(d.to_delta());
-    [
+    grid[next].then_some(((next, *d), 1)).into_iter().chain([
         ((*p, d.clockwise_cross()), 1000),
         ((*p, d.counterclockwise_cross()), 1000),
-    ]
-    .into_iter()
-    .chain(grid[next].then(|| ((next, *d), 1)))
+    ])
 }
 
-fn solve1(input: &Input) -> usize {
-    let (grid, start, end) = input;
+fn solve1((grid, start, end): &Input) -> usize {
     dijkstra::dijkstra(
         &(*start, Dir::E),
         |n| successors(n, grid),
@@ -80,22 +77,19 @@ fn solve1(input: &Input) -> usize {
     .1
 }
 
-fn solve2(input: &Input) -> usize {
-    let (grid, start, end) = input;
-    let mut paths = astar::astar_bag(
+fn solve2((grid, start, end): &Input) -> usize {
+    astar::astar_bag(
         &(*start, Dir::E),
         |n| successors(n, grid),
         |n| n.0.delta_to(*end).unwrap().manhattan(),
         |(p, _)| p == end,
     )
     .expect("no path found")
-    .0;
-    paths
-        .into_iter()
-        .flatten()
-        .map(|(p, _)| p)
-        .collect::<HashSet<_>>()
-        .len()
+    .0
+    .flatten()
+    .map(|(p, _)| p)
+    .collect::<HashSet<_>>()
+    .len()
 }
 
 #[cfg(test)]
