@@ -329,6 +329,12 @@ impl<T> Delta<T> {
     }
 }
 
+impl Delta<isize> {
+    pub fn manhattan(&self) -> usize {
+        self.dx.abs() as usize + self.dy.abs() as usize
+    }
+}
+
 impl<T> Point<T> {
     pub fn into_both(self) -> Both<T, T> {
         Both(self.x, self.y)
