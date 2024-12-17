@@ -1,0 +1,15 @@
+while a != 0 {
+	b = a % 8;
+	b ^= 3;
+	c = a >> b;
+	a = a >> 3;
+	b ^= c;
+	b ^= 5;
+	out(b % 8);
+}
+
+a = [..]
+while k = a.pop() {
+	b = k;
+
+}

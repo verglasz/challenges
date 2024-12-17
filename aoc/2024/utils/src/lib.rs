@@ -4,6 +4,7 @@ use std::{borrow::Borrow, hash::Hash, io::stdin};
 pub mod decimals;
 pub mod grid;
 pub mod maths;
+pub mod prettyprinting;
 pub mod types;
 
 pub fn get_stdinput() -> impl Iterator<Item = String> {

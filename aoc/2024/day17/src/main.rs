@@ -1,12 +1,13 @@
 use core::fmt;
 use std::{
     collections::HashSet,
-    ops::{ControlFlow, Deref},
+    ops::{ControlFlow, Deref, Index, IndexMut},
     thread,
 };
 
 use utils::{
     get_stdinput,
+    prettyprinting::DisplayAsDebug,
     types::{Both, Either},
 };
 
@@ -71,6 +72,28 @@ struct Regs {
     a: usize,
     b: usize,
     c: usize,
+}
+
+impl IndexMut<Reg> for Regs {
+    fn index_mut(&mut self, index: Reg) -> &mut Self::Output {
+        match index {
+            Reg::A => &mut self.a,
+            Reg::B => &mut self.b,
+            Reg::C => &mut self.c,
+        }
+    }
+}
+
+impl Index<Reg> for Regs {
+    type Output = usize;
+
+    fn index(&self, index: Reg) -> &Self::Output {
+        match index {
+            Reg::A => &self.a,
+            Reg::B => &self.b,
+            Reg::C => &self.c,
+        }
+    }
 }
 
 impl State {
@@ -196,6 +219,33 @@ impl ThreeBit {
             _ => unreachable!(),
         })
     }
+
+    fn comb(self) -> ComboType {
+        use ComboType::*;
+        use Reg::*;
+        match self.0 {
+            n @ 0..=3 => Lit(n),
+            4 => R(A),
+            5 => R(B),
+            6 => R(C),
+            7 => Reserved,
+            _ => unreachable!(),
+        }
+    }
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+enum ComboType {
+    Lit(u8),
+    R(Reg),
+    Reserved,
+}
+
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+enum Reg {
+    A,
+    B,
+    C,
 }
 
 fn parse(mut lines: impl Iterator<Item = impl AsRef<str>>) -> Input {
@@ -274,7 +324,7 @@ fn run_check(mut regs: Regs, insts: &[ThreeBit]) -> bool {
     left.is_empty()
 }
 
-fn solve2((orig_regs, insts): &Input) -> usize {
+fn bad_solve2((orig_regs, insts): &Input) -> usize {
     let orig_regs = *orig_regs;
     thread::scope(|s| {
         let mut threads = vec![];
@@ -295,19 +345,73 @@ fn solve2((orig_regs, insts): &Input) -> usize {
             threads.push(jh);
         }
         loop {
-            let Both(done, waiting): Both<_, _> = threads
+            let Both(done, waiting): Both<Vec<_>, Vec<_>> = threads
                 .into_iter()
                 .map(|jh| {
                     if jh.is_finished() {
-                        Either::Left(jh.join())
+                        Either::Left(jh)
                     } else {
                         Either::Right(jh)
                     }
                 })
                 .collect();
+            for d in done {
+                let t = d.thread().id();
+                let res = d.join().unwrap_or_else(|e| {
+                    panic!("thread {:?} panicked: {:?}", t, e);
+                });
+                if let Some(d) = res {
+                    // we need to cancel the threads since we don't want to wait...
+                    // this design is problematic, should have each thread send back the result on a mpsc
+                    // channel instead probably
+                    return d;
+                }
+            }
+            threads = waiting;
         }
-    });
-    panic!("no solution found");
+    })
+}
+
+impl fmt::Display for ComboType {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        use ComboType::*;
+        match self {
+            Lit(n) => write!(f, "{}", n),
+            R(r) => write!(f, "{:?}", r),
+            Reserved => write!(f, "!"),
+        }
+    }
+}
+
+struct DisplayInsts<'a>(&'a [ThreeBit], usize);
+
+impl fmt::Display for DisplayInsts<'_> {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+        f.debug_list()
+            .entries(self.0.chunks(2).enumerate().map(|(i, w)| {
+                let inst = w[0].op();
+                let operand = w[1];
+                let pc = self.1 + i * 2;
+                let s = if inst.op_type() == OpType::Lit {
+                    format!("{pc}: {:?}({:?})", inst, operand.lit())
+                } else {
+                    let val = operand.comb();
+                    format!("{pc}: {:?}({})", inst, val)
+                };
+                DisplayAsDebug(s)
+            }))
+            .finish()
+    }
+}
+
+fn solve2((orig_regs, insts): &Input) -> usize {
+    // let orig_regs = *orig_regs;
+    println!("instructions:");
+    println!("aligned:");
+    println!("{:#}", DisplayInsts(&insts[..], 0));
+    println!("offset:");
+    println!("{:#}", DisplayInsts(&insts[1..insts.len() - 1], 1));
+    0
 }
 
 macro_rules! bits {
