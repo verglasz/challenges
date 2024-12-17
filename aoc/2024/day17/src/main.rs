@@ -113,18 +113,22 @@ impl State {
     }
 
     fn run(&mut self) -> Vec<ThreeBit> {
-        let mut output = vec![];
-        while let ControlFlow::Continue(out) = self.step() {
-            if let Some(out) = out {
-                output.push(out);
-            }
-        }
-        output
+        run(&mut self.regs, &mut self.pc, &self.insts)
     }
 
     fn step(&mut self) -> ControlFlow<(), Option<ThreeBit>> {
         step(&mut self.regs, &mut self.pc, &self.insts)
     }
+}
+
+fn run(regs: &mut Regs, pc: &mut usize, insts: &[ThreeBit]) -> Vec<ThreeBit> {
+    let mut output = vec![];
+    while let ControlFlow::Continue(out) = step(regs, pc, insts) {
+        if let Some(out) = out {
+            output.push(out);
+        }
+    }
+    output
 }
 
 fn step(regs: &mut Regs, pc: &mut usize, insts: &[ThreeBit]) -> ControlFlow<(), Option<ThreeBit>> {
@@ -411,7 +415,36 @@ fn solve2((orig_regs, insts): &Input) -> usize {
     println!("{:#}", DisplayInsts(&insts[..], 0));
     println!("offset:");
     println!("{:#}", DisplayInsts(&insts[1..insts.len() - 1], 1));
-    0
+    println!("assuming that solvability is ThreeBit-wise");
+    solve_tribwise(*orig_regs, insts, 0, 1).expect("no solution found")
+}
+
+fn solve_tribwise(
+    orig_regs: Regs,
+    insts: &[ThreeBit],
+    prev_a: usize,
+    tribs: usize,
+) -> Option<usize> {
+    // only consider the last n tribbles of the instructions
+    let considered = &insts[insts.len() - tribs..];
+    // println!("considering the last {} tribbles: {:?}", tribs, considered);
+    println!("considering the last {} tribbles", tribs);
+    for tribble in 0..8 {
+        let a = (prev_a << 3) | tribble;
+        let mut regs = Regs { a, ..orig_regs };
+        let mut pc = 0;
+        let out = run(&mut regs, &mut pc, insts);
+        // dbg!(a, &out);
+        if &out == considered {
+            println!("found partial solution: a={:b}", a);
+            if tribs == insts.len() {
+                return Some(a);
+            } else if let Some(sol) = solve_tribwise(orig_regs, insts, a, tribs + 1) {
+                return Some(sol);
+            } // else keep going
+        }
+    }
+    None
 }
 
 macro_rules! bits {
