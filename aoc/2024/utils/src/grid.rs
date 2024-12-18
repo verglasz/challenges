@@ -379,8 +379,9 @@ impl Point<usize> {
         ))
     }
 
-    pub fn neighbours(&self) -> impl Iterator<Item = Self> + '_ {
-        Dir::CROSS.iter().map(move |&dir| self.neighbour(dir))
+    pub fn neighbours(&self) -> impl Iterator<Item = Self> {
+        let p = *self;
+        Dir::CROSS.into_iter().map(move |dir| p.neighbour(dir))
     }
 
     pub fn neighbour(&self, dir: Dir) -> Self {
