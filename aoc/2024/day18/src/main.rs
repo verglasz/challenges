@@ -1,6 +1,9 @@
 use std::collections::HashSet;
 
-use pathfinding::{directed::dijkstra, prelude::astar};
+use pathfinding::{
+    directed::{bfs, dijkstra},
+    prelude::astar,
+};
 use utils::{
     get_stdinput,
     grid::{Dir, Point},
@@ -30,24 +33,24 @@ fn parse(lines: impl Iterator<Item = impl AsRef<str>>) -> Input {
     (falling, bounds)
 }
 
+fn successors<'a>(
+    p: &Point<usize>,
+    bounds: Point<usize>,
+    blocks: &'a HashSet<Point<usize>>,
+) -> impl Iterator<Item = Point<usize>> + 'a {
+    p.neighbours()
+        .filter(move |p| !blocks.contains(p) && p.in_bounds(bounds.into_both().into()))
+}
+
 fn solve1(input: &Input) -> usize {
     let (falling, bounds) = input;
-    let fallen: HashSet<_> = falling.iter().take(1024).collect();
+    let fallen: HashSet<_> = falling.iter().copied().take(1024).collect();
     let start = Point::new(0, 0);
     let end = bounds.neighbour(Dir::NW);
-    astar(
-        &start,
-        |&current| {
-            current
-                .neighbours()
-                .filter(|p| !fallen.contains(p) && p.in_bounds(bounds.into_both().into()))
-                .map(|p| (p, 1))
-        },
-        |p| p.delta_to(end).unwrap().manhattan(),
-        |p| *p == end,
-    )
-    .expect("no path found")
-    .1
+    bfs::bfs(&start, |p| successors(p, *bounds, &fallen), |p| *p == end)
+        .expect("no path found")
+        .len()
+        - 1
 }
 
 fn solve2(input: &Input) -> String {
@@ -56,16 +59,11 @@ fn solve2(input: &Input) -> String {
     let start = Point::new(0, 0);
     let end = bounds.neighbour(Dir::NW);
     let mut blocker = None;
-    for (i, b) in falling.iter().enumerate() {
-        fallen.insert(b);
+    for b in falling {
+        fallen.insert(*b);
         let path = astar(
             &start,
-            |&current| {
-                current
-                    .neighbours()
-                    .filter(|p| !fallen.contains(p) && p.in_bounds(bounds.into_both().into()))
-                    .map(|p| (p, 1))
-            },
+            |&current| successors(&current, *bounds, &fallen).map(|p| (p, 1)),
             |p| p.delta_to(end).unwrap().manhattan(),
             |p| *p == end,
         );
