@@ -1,20 +1,31 @@
-use std::collections::{HashMap, HashSet};
+use std::{
+    collections::HashMap,
+    sync::atomic::{AtomicUsize, Ordering},
+};
 
-use bstr::{BStr, BString};
 use utils::get_stdinput;
 
 fn main() {
     let input = get_stdinput();
     let parsed = parse(input);
     let p1 = solve1(&parsed);
-    println!("sol1: {p1:?}");
+    println!(
+        "sol1: {p1:?}, {} things checked",
+        CNT.load(Ordering::Relaxed)
+    );
+    CNT.store(0, Ordering::Relaxed);
     let p2 = solve2(&parsed);
-    println!("sol2: {p2:?}");
+    println!(
+        "sol2: {p2:?}, {} things checked",
+        CNT.load(Ordering::Relaxed)
+    );
 }
 type Input = (Patterns, Designs);
 type Patterns = Vec<Design>;
 type Designs = Vec<Design>;
 type Design = Vec<u8>;
+
+static CNT: AtomicUsize = AtomicUsize::new(0);
 
 fn parse(mut lines: impl Iterator<Item = impl AsRef<str>>) -> Input {
     let patterns = lines
@@ -34,16 +45,24 @@ fn parse(mut lines: impl Iterator<Item = impl AsRef<str>>) -> Input {
 
 fn solve1(input: &Input) -> usize {
     let (patterns, designs) = input;
-    let mut feasible = HashMap::from([(b"".to_vec(), true)]);
+    let mut feasible = HashMap::from([(b"".as_ref(), true)]);
     designs
         .iter()
-        .filter(|design| is_feasible(&mut feasible, design, patterns))
+        .filter(|design| {println!("Checked {} things", CNT.swap(0, Ordering::Relaxed)); false} | is_feasible(&mut feasible, design, patterns))
         .count()
 }
 
-fn is_feasible(feasible: &mut HashMap<Design, bool>, design: &[u8], patterns: &Patterns) -> bool {
+fn is_feasible<'a>(
+    feasible: &mut HashMap<&'a [u8], bool>,
+    design: &'a [u8],
+    patterns: &Patterns,
+) -> bool {
     if let Some(&is_feasible) = feasible.get(design) {
         return is_feasible;
+    }
+    let n = CNT.fetch_add(1, Ordering::Relaxed) + 1;
+    if n % 1000_000 == 0 {
+        println!("Checked {n} things so far...");
     }
     let res = patterns
         .iter()
@@ -52,23 +71,28 @@ fn is_feasible(feasible: &mut HashMap<Design, bool>, design: &[u8], patterns: &P
             is_feasible(feasible, rest, patterns).then_some(())
         })
         .is_some();
-    feasible.insert(design.to_vec(), res);
+    feasible.insert(design, res);
     res
 }
 
 fn solve2(input: &Input) -> usize {
     let (patterns, designs) = input;
-    let mut counts = HashMap::from([(b"".to_vec(), 1)]);
+    let mut counts = HashMap::from([(b"".as_ref(), 1)]);
     designs
         .iter()
         .map(|design| find_counts(&mut counts, design, patterns))
         .sum()
 }
 
-fn find_counts(counts: &mut HashMap<Design, usize>, design: &[u8], patterns: &Patterns) -> usize {
+fn find_counts<'a>(
+    counts: &mut HashMap<&'a [u8], usize>,
+    design: &'a [u8],
+    patterns: &Patterns,
+) -> usize {
     if let Some(&count) = counts.get(design) {
         return count;
     }
+    CNT.fetch_add(1, Ordering::Relaxed);
     let count = patterns
         .iter()
         .map(|pattern| {
@@ -78,7 +102,7 @@ fn find_counts(counts: &mut HashMap<Design, usize>, design: &[u8], patterns: &Pa
                 .unwrap_or(0)
         })
         .sum();
-    counts.insert(design.to_vec(), count);
+    counts.insert(design, count);
     count
 }
 
