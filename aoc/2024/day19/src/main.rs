@@ -3,6 +3,7 @@ use std::{
     sync::atomic::{AtomicUsize, Ordering},
 };
 
+use regex::bytes::Regex;
 use utils::get_stdinput;
 
 fn main() {
@@ -43,13 +44,29 @@ fn parse(mut lines: impl Iterator<Item = impl AsRef<str>>) -> Input {
     (patterns, designs)
 }
 
-fn solve1(input: &Input) -> usize {
+fn solve1dp(input: &Input) -> usize {
     let (patterns, designs) = input;
     let mut feasible = HashMap::from([(b"".as_ref(), true)]);
     designs
         .iter()
-        .filter(|design| {println!("Checked {} things", CNT.swap(0, Ordering::Relaxed)); false} | is_feasible(&mut feasible, design, patterns))
+        .filter(|design| {/*println!("Checked {} things", CNT.swap(0, Ordering::Relaxed)); */false} | is_feasible(&mut feasible, design, patterns))
         .count()
+}
+
+const solve1: for<'a> fn(&'a (Vec<Vec<u8>>, Vec<Vec<u8>>)) -> usize = solve1dp;
+
+fn solve1regex(input: &Input) -> usize {
+    let (patterns, designs) = input;
+    let r = Regex::new(&format!(
+        "^({})*$",
+        patterns
+            .iter()
+            .map(|p| String::from_utf8_lossy(p).to_string())
+            .collect::<Vec<_>>()
+            .join("|")
+    ))
+    .expect("regex");
+    designs.iter().filter(|&d| r.is_match(d)).count()
 }
 
 fn is_feasible<'a>(
@@ -60,10 +77,10 @@ fn is_feasible<'a>(
     if let Some(&is_feasible) = feasible.get(design) {
         return is_feasible;
     }
-    let n = CNT.fetch_add(1, Ordering::Relaxed) + 1;
-    if n % 1000_000 == 0 {
-        println!("Checked {n} things so far...");
-    }
+    // let n = CNT.fetch_add(1, Ordering::Relaxed) + 1;
+    // if n % 1000_000 == 0 {
+    //     println!("Checked {n} things so far...");
+    // }
     let res = patterns
         .iter()
         .find_map(|pattern| {
@@ -76,6 +93,7 @@ fn is_feasible<'a>(
 }
 
 fn solve2(input: &Input) -> usize {
+    return 0;
     let (patterns, designs) = input;
     let mut counts = HashMap::from([(b"".as_ref(), 1)]);
     designs
