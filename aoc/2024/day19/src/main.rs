@@ -35,41 +35,34 @@ fn parse(mut lines: impl Iterator<Item = impl AsRef<str>>) -> Input {
 fn solve1(input: &Input) -> usize {
     let (patterns, designs) = input;
     let mut feasible = HashMap::from([(b"".to_vec(), true)]);
-    let mut count = 0;
-    for design in designs {
-        if is_feasible(&mut feasible, design, patterns) {
-            count += 1;
-        }
-    }
-    count
+    designs
+        .iter()
+        .filter(|design| is_feasible(&mut feasible, design, patterns))
+        .count()
 }
 
 fn is_feasible(feasible: &mut HashMap<Design, bool>, design: &[u8], patterns: &Patterns) -> bool {
     if let Some(&is_feasible) = feasible.get(design) {
         return is_feasible;
     }
-    for pattern in patterns {
-        let Some(rest) = design.strip_prefix(pattern.as_slice()) else {
-            continue;
-        };
-        if is_feasible(feasible, rest, patterns) {
-            feasible.insert(design.to_vec(), true);
-            return true;
-        }
-    }
-    // checked all possible prefixes and no luck :(
-    feasible.insert(design.to_vec(), false);
-    false
+    let res = patterns
+        .iter()
+        .find_map(|pattern| {
+            let rest = design.strip_prefix(pattern.as_slice())?;
+            is_feasible(feasible, rest, patterns).then_some(())
+        })
+        .is_some();
+    feasible.insert(design.to_vec(), res);
+    res
 }
 
 fn solve2(input: &Input) -> usize {
     let (patterns, designs) = input;
     let mut counts = HashMap::from([(b"".to_vec(), 1)]);
-    let mut total = 0;
-    for design in designs {
-        total += find_counts(&mut counts, design, patterns);
-    }
-    total
+    designs
+        .iter()
+        .map(|design| find_counts(&mut counts, design, patterns))
+        .sum()
 }
 
 fn find_counts(counts: &mut HashMap<Design, usize>, design: &[u8], patterns: &Patterns) -> usize {
