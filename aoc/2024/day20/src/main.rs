@@ -117,25 +117,24 @@ fn solve1n(input: &Input, threshold: usize) -> usize {
     cheats
 }
 
-fn solve2(input: &Input) -> () {}
+fn solve2(input: &Input) -> usize {
+    solve2n(input, 100)
+}
 
-fn solve2n(input: &Input, threshold: usize) -> usize {
+// just find times to reach each cell
+fn walk(input: &Input) -> VecMat<usize> {
     let (start, map, end) = input;
     let mut map = map.clone();
     let mut p = *start;
-    let mut cheat_times = VecMat::filled_with(map.shape(), |_| vec![]);
-    let mut cheats = 0;
     let mut time = 0;
+    let mut times = VecMat::filled(map.shape(), &usize::MAX);
     while p != *end {
         // mark current cell as visited
         map[p] = CellState::Pathed;
-        // check the next normal step
+        times[p] = time;
+        // check all directions
         let mut step = p;
-        // now check what we can do by starting to cheat here!
-        let mut visited = HashSet::from([p]);
-        let mut queue = vec![p];
-        while let Some(next) = queue.pop() {
-            let xxx;
+        for next in p.neighbours() {
             match map.get(next) {
                 None => continue,
                 Some(CellState::Pathed) => continue,
@@ -146,12 +145,70 @@ fn solve2n(input: &Input, threshold: usize) -> usize {
                 Some(CellState::Wall) => {}
             };
         }
-        // accumulate the cheats that got to this cell
-        for t in cheat_times[p].iter().copied() {
-            let saved = time - t;
-            if saved >= threshold {
-                cheats += 1;
+        debug_assert_ne!(step, p, "no path found before end..");
+        // move to the next cell
+        time += 1;
+        p = step;
+    }
+    times[p] = time;
+    times
+}
+
+fn solve2n(input: &Input, threshold: usize) -> usize {
+    let (start, map, end) = input;
+    let mut map = map.clone();
+    let normal_times = walk(input);
+    let mut p = *start;
+    let mut cheats = 0;
+    let mut time = 0;
+    while p != *end {
+        // mark current cell as visited
+        map[p] = CellState::Pathed;
+        // check the next normal step
+        let mut step = p;
+        // now check what we can do by starting to cheat here!
+        let mut visited = HashSet::from([p]);
+        let mut queue: Vec<_> = p.neighbours().collect();
+        let mut cheat_t = 1;
+        // println!("at step {}", time);
+        while cheat_t <= 20 && !queue.is_empty() {
+            // println!("cheat_t: {}, queue size: {}", cheat_t, queue.len());
+            let mut next_queue = Vec::with_capacity(queue.len());
+            for next in queue.drain(..) {
+                match map.get(next) {
+                    None => continue, // out of bounds
+                    Some(CellState::Pathed) => {
+                        // we've already been here walking normally before,
+                        // no point in marking a cheat to here
+                        // only thing we need to do is check neighbours and continue
+                        // continue;
+                    }
+                    Some(CellState::Empty) => {
+                        if cheat_t == 1 {
+                            step = next;
+                            // we'll walk here normally so the cheat saves no time...
+                        } else {
+                            // we can cheat to here
+                            let cheat_time = cheat_t + time;
+                            let normal_time = normal_times[next];
+                            if cheat_time + threshold <= normal_time {
+                                // we can cheat to here faster than walking normally
+                                cheats += 1;
+                            }
+                        }
+                    }
+                    Some(CellState::Wall) => {
+                        // check neighbours and continue
+                    }
+                };
+                for n in next.neighbours() {
+                    if visited.insert(n) {
+                        next_queue.push(n);
+                    }
+                }
             }
+            cheat_t += 1;
+            queue = next_queue;
         }
         debug_assert_ne!(step, p, "no path found before end..");
         // move to the next cell
@@ -159,12 +216,12 @@ fn solve2n(input: &Input, threshold: usize) -> usize {
         p = step;
     }
     // accumulate end cheats
-    for t in cheat_times[p].iter().copied() {
-        let saved = time - t;
-        if saved >= threshold {
-            cheats += 1;
-        }
-    }
+    // for t in cheat_times[p].iter().copied() {
+    //     let saved = time - t;
+    //     if saved >= threshold {
+    //         cheats += 1;
+    //     }
+    // }
     cheats
 }
 
@@ -235,6 +292,55 @@ mod tests {
         //     There are 22 cheats that save 72 picoseconds.
         //     There are 4 cheats that save 74 picoseconds.
         //     There are 3 cheats that save 76 picoseconds.
-        assert_eq!(solve2(&input), ());
+        let mut n = 0;
+        assert_eq!(solve2n(&input, 77), n);
+        n += 3;
+        assert_eq!(solve2n(&input, 76), n);
+        assert_eq!(solve2n(&input, 75), n);
+        n += 4;
+        assert_eq!(solve2n(&input, 74), n);
+        assert_eq!(solve2n(&input, 73), n);
+        n += 22;
+        assert_eq!(solve2n(&input, 72), n);
+        assert_eq!(solve2n(&input, 71), n);
+        n += 12;
+        assert_eq!(solve2n(&input, 70), n);
+        assert_eq!(solve2n(&input, 69), n);
+        n += 14;
+        assert_eq!(solve2n(&input, 68), n);
+        assert_eq!(solve2n(&input, 67), n);
+        n += 12;
+        assert_eq!(solve2n(&input, 66), n);
+        assert_eq!(solve2n(&input, 65), n);
+        n += 19;
+        assert_eq!(solve2n(&input, 64), n);
+        assert_eq!(solve2n(&input, 63), n);
+        n += 20;
+        assert_eq!(solve2n(&input, 62), n);
+        assert_eq!(solve2n(&input, 61), n);
+        n += 23;
+        assert_eq!(solve2n(&input, 60), n);
+        assert_eq!(solve2n(&input, 59), n);
+        n += 25;
+        assert_eq!(solve2n(&input, 58), n);
+        assert_eq!(solve2n(&input, 57), n);
+        n += 39;
+        assert_eq!(solve2n(&input, 56), n);
+        assert_eq!(solve2n(&input, 55), n);
+        n += 29;
+        assert_eq!(solve2n(&input, 54), n);
+        assert_eq!(solve2n(&input, 53), n);
+        n += 31;
+        assert_eq!(solve2n(&input, 52), n);
+        assert_eq!(solve2n(&input, 51), n);
+        n += 32;
+        assert_eq!(solve2n(&input, 50), n);
+    }
+
+    #[test]
+    fn test_p2() {
+        let input = include_str!("../input");
+        let input = parse(input.lines());
+        assert!(solve2(&input) > 220679);
     }
 }
