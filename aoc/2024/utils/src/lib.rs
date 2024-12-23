@@ -7,6 +7,8 @@ pub mod maths;
 pub mod prettyprinting;
 pub mod types;
 
+pub mod graphs;
+
 pub fn get_stdinput() -> impl Iterator<Item = String> {
     stdin().lines().map(|s| s.expect("input string unparsable"))
 }
