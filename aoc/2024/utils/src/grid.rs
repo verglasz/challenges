@@ -126,6 +126,14 @@ impl<T> VecMat<T> {
         Self { data }
     }
 
+    pub fn filled_with(shape: (usize, usize), f: impl Fn(Point<usize>) -> T) -> Self {
+        let (rows, cols) = shape;
+        let data = (0..rows)
+            .map(|y| (0..cols).map(|x| f(Point::new(x, y))).collect())
+            .collect();
+        Self { data }
+    }
+
     pub fn highlighted<'a, 'b: 'a>(
         &'a self,
         highlights: &'b HashSet<Point<usize>>,
