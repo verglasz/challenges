@@ -319,7 +319,7 @@ impl<T: Neg> Neg for Delta<T> {
 }
 
 impl<T> Point<T> {
-    pub fn new(x: T, y: T) -> Self {
+    pub const fn new(x: T, y: T) -> Self {
         Self { x, y }
     }
 }
@@ -357,8 +357,22 @@ impl Point<isize> {
         }
     }
 }
+impl Point<u8> {
+    pub fn delta_to(&self, other: Self) -> Option<Delta<i8>> {
+        Some(Delta::new(
+            (other.x as i8).checked_sub(self.x as i8)?,
+            (other.y as i8).checked_sub(self.y as i8)?,
+        ))
+    }
+}
 
 impl Point<usize> {
+    pub fn delta_to(&self, other: Self) -> Option<Delta<isize>> {
+        Some(Delta::new(
+            (other.x as isize).checked_sub(self.x as isize)?,
+            (other.y as isize).checked_sub(self.y as isize)?,
+        ))
+    }
     pub fn wrapping_add_signed(&self, d: Delta<isize>) -> Self {
         Self {
             x: self.x.wrapping_add_signed(d.dx),
@@ -378,13 +392,6 @@ impl Point<usize> {
 
     pub fn as_in_bounds(&self, (width, height): (usize, usize)) -> Option<Self> {
         self.in_bounds((width, height)).then_some(*self)
-    }
-
-    pub fn delta_to(&self, other: Self) -> Option<Delta<isize>> {
-        Some(Delta::new(
-            (other.x as isize).checked_sub(self.x as isize)?,
-            (other.y as isize).checked_sub(self.y as isize)?,
-        ))
     }
 
     pub fn neighbours(&self) -> impl Iterator<Item = Self> {
@@ -449,7 +456,12 @@ impl Dir {
         Self::ALL.get(id as usize).copied()
     }
 
-    pub fn to_offset(&self) -> (isize, isize) {
+    pub fn to_offset<T: From<i8>>(&self) -> (T, T) {
+        let (a, b) = self.to_i8_offset();
+        (a.into(), b.into())
+    }
+
+    pub fn to_i8_offset(&self) -> (i8, i8) {
         match self {
             Dir::N => (0, -1),
             Dir::NE => (1, -1),
@@ -483,7 +495,7 @@ impl Dir {
         self.rotate_by(-2)
     }
 
-    pub fn to_delta(&self) -> Delta<isize> {
+    pub fn to_delta<T: From<i8>>(&self) -> Delta<T> {
         let (dx, dy) = self.to_offset();
         Delta::new(dx, dy)
     }
