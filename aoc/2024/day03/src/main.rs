@@ -30,7 +30,7 @@ fn sum_muls(s: &str) -> isize {
                 .expect("mul args should be valid numbers");
             (a, b)
         })
-        .map(|(a, b)| (a * b))
+        .map(|(a, b)| a * b)
         .sum()
 }
 

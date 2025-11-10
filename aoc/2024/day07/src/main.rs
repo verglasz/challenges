@@ -47,8 +47,8 @@ fn solve<const N: usize>(input: &Input, maps: [fn(usize, usize) -> Option<usize>
         .sum()
 }
 
-// this short-circuits when it finds a solution, ends up being another factor of 2 faster or so on
-// my input
+// this short-circuits when it finds a solution,
+// ends up being another factor of 2 faster or so on my input
 fn reachable_recurse(
     target: usize,
     ops: &[usize],
@@ -90,6 +90,8 @@ where
 fn mask10(n: usize) -> usize {
     // a power of 10 which covers n, as in, has as many zeros as n has digits
     // eg 123 -> 1000, 1234 -> 10000
+    return (n.ilog10() + 1) as usize;
+
     let mut n = n;
     let mut pow = 1;
     while n > 0 {
