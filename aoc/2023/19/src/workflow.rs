@@ -23,9 +23,9 @@ impl Bound {
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub struct Step {
-    pub prop: Prop,
-    pub(crate) bound: Bound,
     pub dest: Label,
+    pub prop: Prop,
+    pub bound: Bound,
 }
 
 type Prop = u8;
@@ -59,12 +59,14 @@ impl Step {
     }
 }
 
+pub const LABEL_LEN: usize = 3;
+
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
-pub(crate) struct Label([u8; 4]);
+pub(crate) struct Label([u8; LABEL_LEN]);
 
 impl Debug for Label {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let zero = self.0.iter().position(|&b| b == 0).unwrap_or(4);
+        let zero = self.0.iter().position(|&b| b == 0).unwrap_or(LABEL_LEN);
         let s = std::str::from_utf8(&self.0[..zero]).unwrap();
         write!(f, "'{}'", s)
     }
@@ -316,19 +318,23 @@ impl<I: Iterator> Iterator for KeepLast<I, I::Item> {
 }
 
 pub fn parse_label(s: &str) -> Label {
-    let mut label = [0; 4];
+    let mut label = [0; LABEL_LEN];
     let s = s.as_bytes();
     label[..s.len()].copy_from_slice(s);
     Label(label)
 }
 
-pub const START: Label = Label(*b"in\0\0");
-pub const ACCEPT: Label = Label(*b"A\0\0\0");
-pub const REJECT: Label = Label(*b"R\0\0\0");
+pub const START: Label = Label(*b"in\0");
+pub const ACCEPT: Label = Label(*b"A\0\0");
+pub const REJECT: Label = Label(*b"R\0\0");
 
 #[cfg(test)]
 mod test {
     use super::*;
+    #[test]
+    fn test_size() {
+        assert!(size_of::<Step>() == 8);
+    }
 
     #[test]
     fn test_split() {
