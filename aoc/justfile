@@ -1,0 +1,8 @@
+
+
+thepwd := `pwd`
+
+[no-cd]
+naoc DAY="":
+	@echo "new Advent of Code for day {{DAY}}"
+	cargo aoc {{if DAY != "" { DAY } else { `date "+%d"`} }} --template "{{thepwd}}/00/main.rs"
