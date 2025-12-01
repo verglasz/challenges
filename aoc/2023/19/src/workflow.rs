@@ -138,10 +138,10 @@ impl From<HashMap<Label, Steps>> for Workflows {
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct RawEntry<T> {
-    x: T,
-    m: T,
-    a: T,
-    s: T,
+    pub x: T,
+    pub m: T,
+    pub a: T,
+    pub s: T,
 }
 
 impl<T> Index<Prop> for RawEntry<T> {
