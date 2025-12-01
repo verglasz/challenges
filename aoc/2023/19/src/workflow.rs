@@ -1,7 +1,7 @@
 use std::{
     collections::HashMap,
     fmt::Debug,
-    ops::{Deref, RangeInclusive},
+    ops::RangeInclusive,
     ops::{Index, IndexMut},
 };
 
@@ -22,15 +22,15 @@ impl Bound {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct Step {
-    prop: Prop,
-    bound: Bound,
-    dest: Label,
+pub struct Step {
+    pub prop: Prop,
+    pub(crate) bound: Bound,
+    pub dest: Label,
 }
 
 type Prop = u8;
 
-fn parse_cond(s: &str) -> (Prop, u8, u16) {
+pub fn parse_cond(s: &str) -> (Prop, u8, u16) {
     let (pt, n) = s.split_at(2);
     let &[prop, typ] = pt.as_bytes() else {
         panic!("Invalid type in condition");
@@ -40,7 +40,7 @@ fn parse_cond(s: &str) -> (Prop, u8, u16) {
 }
 
 impl Step {
-    fn parse(s: &str) -> Self {
+    pub fn parse(s: &str) -> Self {
         let (cond, target) = s.split_once(':').expect("No : in step input");
         let (prop, typ, n) = parse_cond(cond);
         use Bound::*;
@@ -71,12 +71,12 @@ impl Debug for Label {
 }
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
-struct Steps {
+pub struct Steps {
     conds: Vec<Step>,
 }
 
 impl Steps {
-    fn next(&self, entry: Entry) -> Label {
+    pub fn next(&self, entry: Entry) -> Label {
         for step in &self.conds {
             if step.bound.contains(entry[step.prop]) {
                 return step.dest;
@@ -98,7 +98,7 @@ pub(crate) struct Workflows {
 }
 
 impl Workflows {
-    fn accept(&self, entry: Entry) -> Option<usize> {
+    pub fn accept(&self, entry: Entry) -> Option<usize> {
         let mut workflow = START;
         loop {
             if workflow == ACCEPT {
@@ -111,7 +111,7 @@ impl Workflows {
         }
     }
 
-    fn tree(&self, start: Label, block: Block) -> usize {
+    pub fn tree(&self, start: Label, block: Block) -> usize {
         let workflow = &self.inner[&start];
         let mut total = 0;
         for (part, dest) in block.fragments(workflow) {
@@ -135,7 +135,7 @@ impl From<HashMap<Label, Steps>> for Workflows {
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-struct RawEntry<T> {
+pub struct RawEntry<T> {
     x: T,
     m: T,
     a: T,
@@ -168,9 +168,9 @@ impl<T> IndexMut<Prop> for RawEntry<T> {
     }
 }
 
-type Entry = RawEntry<u16>;
-type SingleBlock = RangeInclusive<u16>;
-type Block = RawEntry<SingleBlock>;
+pub type Entry = RawEntry<u16>;
+pub type SingleBlock = RangeInclusive<u16>;
+pub type Block = RawEntry<SingleBlock>;
 
 type OneTwo<T, P = T> = (Option<T>, Option<P>);
 
@@ -199,7 +199,7 @@ type OneTwo<T, P = T> = (Option<T>, Option<P>);
 
 impl Block {
     /// Split the block into fragments that are taken by successive steps of the workflow.
-    fn fragments(self, workflow: &Steps) -> impl Iterator<Item = (Option<Block>, Label)> + '_ {
+    pub fn fragments(self, workflow: &Steps) -> impl Iterator<Item = (Option<Block>, Label)> + '_ {
         let mut current = Some(self);
         workflow.conds.iter().map_while(move |step| {
             let (taken, rest) = current.take()?.split_off_taken(step.prop, step.bound);
@@ -211,7 +211,7 @@ impl Block {
     /// Split off the part of the block that is taken by the condition.
     /// Returns the part that is inside as fst, and the part that is outside as snd.
     /// If only one of them is non-empty, it is returned as the corresponding OneTwo variant.
-    fn split_off(input: SingleBlock, cond: Bound) -> OneTwo<SingleBlock> {
+    pub fn split_off(input: SingleBlock, cond: Bound) -> OneTwo<SingleBlock> {
         let (start, end) = input.into_inner();
         match cond {
             Bound::Upper(n) => {
@@ -239,7 +239,7 @@ impl Block {
         }
     }
 
-    fn split_off_taken(self, prop: u8, bound: Bound) -> OneTwo<Self> {
+    pub fn split_off_taken(self, prop: u8, bound: Bound) -> OneTwo<Self> {
         match Self::split_off(self[prop].clone(), bound) {
             (Some(t), Some(l)) => {
                 let mut taken = self.clone();
@@ -254,7 +254,7 @@ impl Block {
         }
     }
 
-    fn size(&self) -> usize {
+    pub fn size(&self) -> usize {
         let x = self.x.end() - self.x.start() + 1;
         let m = self.m.end() - self.m.start() + 1;
         let a = self.a.end() - self.a.start() + 1;
@@ -264,7 +264,7 @@ impl Block {
 }
 
 impl Entry {
-    fn parse(line: &str) -> Self {
+    pub fn parse(line: &str) -> Self {
         let mut x = 0;
         let mut m = 0;
         let mut a = 0;
@@ -287,18 +287,18 @@ impl Entry {
         Self { x, m, a, s }
     }
 
-    fn sum(&self) -> usize {
+    pub fn sum(&self) -> usize {
         self.x as usize + self.m as usize + self.a as usize + self.s as usize
     }
 }
 
-struct KeepLast<I, T> {
+pub struct KeepLast<I, T> {
     inner: I,
     last: T,
 }
 
 impl<I: Iterator> KeepLast<I, I::Item> {
-    fn new(iter: impl IntoIterator<IntoIter = I>) -> Option<Self> {
+    pub fn new(iter: impl IntoIterator<IntoIter = I>) -> Option<Self> {
         let mut inner = iter.into_iter();
         let last = inner.next()?;
         Some(Self { inner, last })
@@ -315,16 +315,16 @@ impl<I: Iterator> Iterator for KeepLast<I, I::Item> {
     }
 }
 
-fn parse_label(s: &str) -> Label {
+pub fn parse_label(s: &str) -> Label {
     let mut label = [0; 4];
     let s = s.as_bytes();
     label[..s.len()].copy_from_slice(s);
     Label(label)
 }
 
-const START: Label = Label(*b"in\0\0");
-const ACCEPT: Label = Label(*b"A\0\0\0");
-const REJECT: Label = Label(*b"R\0\0\0");
+pub const START: Label = Label(*b"in\0\0");
+pub const ACCEPT: Label = Label(*b"A\0\0\0");
+pub const REJECT: Label = Label(*b"R\0\0\0");
 
 #[cfg(test)]
 mod test {

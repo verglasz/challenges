@@ -1,5 +1,7 @@
 use std::{collections::HashMap, io::stdin, ops::Deref};
 
+use crate::workflow::{parse_label, Bound, KeepLast, Step, Workflows};
+
 mod entry {}
 mod workflow;
 
@@ -24,7 +26,7 @@ fn parse_input<T: Deref<Target = str>>(mut lines: impl Iterator<Item = T>) -> In
         let rest = rest.trim_end_matches('}');
         let pieces = &mut KeepLast::new(rest.split(',')).expect("No pieces in workflow input");
         let mut steps: Vec<_> = pieces.map(Step::parse).collect();
-        let last = pieces.last;
+        let last = pieces.last();
         steps.push(Step {
             prop: b'x',
             bound: Bound::Upper(u16::MAX),
