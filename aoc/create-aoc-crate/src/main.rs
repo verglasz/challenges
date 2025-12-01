@@ -1,7 +1,7 @@
-use std::convert::Infallible;
 use std::fs::File;
-use std::io::Write;
+use std::io::{BufReader, Write};
 use std::process::Command;
+use std::{convert::Infallible, io::Read};
 
 use clap::{Args, Parser};
 
@@ -19,6 +19,8 @@ struct AocArgs {
     /// aoc day number or utils crate name
     #[arg(value_parser=AocName::parse)]
     name: AocName,
+    #[arg(long = "template", short = 't')]
+    template: Option<String>,
 }
 
 #[derive(Debug, Clone)]
@@ -36,22 +38,32 @@ impl AocName {
 
 fn main() {
     let CargoAoc::Aoc(args) = CargoAoc::parse();
+    let mut res = vec![];
+    let template = if let Some(tfile) = args.template {
+        let f = File::open(tfile).expect("template file should exist");
+        BufReader::new(f)
+            .read_to_end(&mut res)
+            .expect("failed to read template file");
+        &res
+    } else {
+        DEFAULT_MAIN
+    };
 
-    create_new_crate(args.name);
+    create_new_crate(args.name, template);
 }
 
-fn create_new_crate(name: AocName) -> () {
+fn create_new_crate(name: AocName, template: &[u8]) -> () {
     use AocName::*;
     match name {
         Day(day) => {
-            let name = create_day_crate(day);
+            let name = create_day_crate(day, template);
             init_day_crate(&name);
         }
         Aux(aux) => create_aux_crate(aux),
     }
 }
 
-fn create_day_crate(day: u8) -> String {
+fn create_day_crate(day: u8, template: &[u8]) -> String {
     println!("Creating day crate day{:02}", day);
     let crate_name = format!("day{:02}", day);
     Command::new("cargo")
@@ -60,7 +72,7 @@ fn create_day_crate(day: u8) -> String {
         .arg(&crate_name)
         .arg("--bin")
         .arg("--edition")
-        .arg("2021")
+        .arg("2024")
         .arg("--name")
         .arg(&crate_name)
         .spawn()
@@ -82,8 +94,16 @@ fn init_day_crate(crate_name: &str) {
         .expect("Failed to add `utils` to deps");
     let mut main =
         File::create(format!("{}/src/main.rs", crate_name)).expect("Failed to create/open main.rs");
-    main.write_all(
-        r###"
+    let main_text = DEFAULT_MAIN;
+    main.write_all(main_text)
+        .expect("Failed to write to main.rs");
+}
+
+fn create_aux_crate(aux: String) -> () {
+    todo!()
+}
+
+const DEFAULT_MAIN: &[u8] = r###"
 use utils::get_stdinput;
 
 fn main() {
@@ -125,11 +145,4 @@ mod tests {
 
 
     "###
-        .as_bytes(),
-    )
-    .expect("Failed to write to main.rs");
-}
-
-fn create_aux_crate(aux: String) -> () {
-    todo!()
-}
+.as_bytes();
