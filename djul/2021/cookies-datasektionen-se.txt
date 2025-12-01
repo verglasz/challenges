@@ -1,0 +1,4 @@
+# Netscape HTTP Cookie File
+
+.datasektionen.se	TRUE	/	FALSE	1609355848	__cfduid	dd344b5a005a9a7e8ac419e8962a21cad1606763848
+djul.datasektionen.se	FALSE	/	FALSE	0	connect.sid	s%3Ami2ALwN8N5cGGLFG4XP6N_pg_3igclJk.ic4uJGFRfTarrUBmv0JM3Xqv3RepzU2JTuKzo7PrmeA

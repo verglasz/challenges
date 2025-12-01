@@ -1,0 +1,3 @@
+[submodule "djul/2021/16/png-text-embed"]
+	path = djul/2021/16/png-text-embed
+	url = git@github.com:gbenison/png-text-embed.git

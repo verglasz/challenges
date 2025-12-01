@@ -1,0 +1,5 @@
+
+# start session for djul.se:5556 at 2023-12-14T12:30:33+01:00
+ls -a /*
+cat /.dockerfile
+
