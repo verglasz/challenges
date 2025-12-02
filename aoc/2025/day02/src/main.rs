@@ -1,9 +1,7 @@
-use std::{collections::HashSet, ops::RangeInclusive};
+use core::ascii;
+use std::{cmp::Ordering, collections::HashSet, ops::RangeInclusive};
 
-use utils::{
-    decimals::{digits, mask10, next_pow10},
-    get_stdinput,
-};
+use utils::{decimals::mask10, get_stdinput};
 
 fn main() {
     let input: Vec<_> = get_stdinput().collect();
@@ -15,7 +13,7 @@ fn main() {
 }
 type Input<'a> = Vec<RangeInclusive<&'a str>>;
 
-fn parse<'a>(line: &str) -> Input<'_> {
+fn parse(line: &str) -> Input<'_> {
     line.split(',')
         .map(|range| range.split_once('-').expect("should contain -"))
         .map(|(a, b)| a..=b)
@@ -68,29 +66,31 @@ fn solve2(input: &Input) -> usize {
     let mut total = 0;
     let mut ids = HashSet::new();
     for range in input {
-        println!("range {range:?}");
-        let first = (find_rep_n_above(range.start(), false, range.end()));
-        let next_last = (find_rep_n_above(range.end(), true, range.end()));
-        for (f, l) in first.iter().zip(next_last) {
-            println!("f:{f:?} l:{l:?}");
+        print!("range {range:?}: ");
+        let first = find_rep_n_above(range.start(), false, range.end());
+        let next_last = find_rep_n_above(range.end(), true, range.end());
+        for (f, l) in first.zip(next_last) {
+            // println!("f:{f:?} l:{l:?}");
             let fa = f.1;
             let la = l.1;
             assert!(f.0 == l.0);
             for id in fa..la {
-                ids.insert(dbg!(make_id(id, f.0)));
+                let made_id = make_id(id, f.0);
+                print!("{made_id}, ");
+                ids.insert(made_id);
             }
         }
+        println!("");
         total += ids.drain().sum::<usize>();
     }
     total
 }
 
 /// return a vector of repeat_times, base_id
-fn find_rep_n_above(start: &str, strict: bool, stop: &str) -> Vec<(usize, usize)> {
+fn find_rep_n_above(start: &str, strict: bool, stop: &str) -> impl Iterator<Item = (usize, usize)> {
     assert!(start.len() > 0);
-    let mut all = vec![];
     let max_reps = stop.len();
-    for reps in 2..=max_reps {
+    (2..=max_reps).map(move |reps| {
         let digs = start.len() / reps;
         let num = if start.len() % reps != 0 {
             10_usize.pow(digs as u32)
@@ -102,22 +102,21 @@ fn find_rep_n_above(start: &str, strict: bool, stop: &str) -> Vec<(usize, usize)
                     .expect("number")
             });
             let fst = chks.next().expect("at least one piece");
-            // we need to go above fst if any subsequent digit group is above
-            // or if they're all exactly equal
+            // we need to go above fst if the first different subsequent digit group
+            // is above fst, or if they're all exactly equal (and we're strict)
             let mut increment = strict;
             for c in chks {
                 increment = match c.cmp(&fst) {
-                    std::cmp::Ordering::Greater => true,
-                    std::cmp::Ordering::Equal => continue,
-                    std::cmp::Ordering::Less => false,
+                    Ordering::Greater => true,
+                    Ordering::Equal => continue,
+                    Ordering::Less => false,
                 };
                 break;
             }
-            fst + increment as usize
+            fst + if increment { 1 } else { 0 }
         };
-        all.push((reps, num))
-    }
-    all
+        (reps, num)
+    })
 }
 
 #[cfg(test)]
