@@ -42,6 +42,8 @@ fn solve2(input: &Input) -> usize {
     let mut total = 0;
     for i in input {
         let (i, r) = (i.rem(100), i / 100);
+        // if the dial starts at 0 we need to avoid counting this as crossing zero
+        // and if i == 0 we should also not count anything
         let ends_past_0 = dial != 0 && i != 0 && (dial + i >= 100 || dial + i <= 0);
         total += r.abs() as usize + if ends_past_0 { 1 } else { 0 };
         dial = (dial + i).rem_euclid(100);
