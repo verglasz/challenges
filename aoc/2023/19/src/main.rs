@@ -2,7 +2,7 @@ use std::{collections::HashMap, io::stdin, ops::Deref};
 
 use crate::workflow::{parse_label, Block, Bound, Entry, KeepLast, Step, Workflows, START};
 
-mod entry {}
+pub mod utils;
 mod workflow;
 
 fn main() {

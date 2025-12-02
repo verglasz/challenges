@@ -6,7 +6,7 @@ use std::{
     ops::{Index, IndexMut, Neg},
 };
 
-use crate::types::Both;
+use crate::utils::types::Both;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub struct Point<T> {
