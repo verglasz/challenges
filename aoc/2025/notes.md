@@ -19,8 +19,16 @@ but the first idea (repeats) was right, then i forgot the intuitive
 reason why which lead to some debugging
 
 also again some memery around boolean checks which maybe could have been avoided by
-writing it out in full in the dumbest possible way
+writing it out in full in the dumbest possible way.
+
+also the solution is half-optimized really, sure it's better than iterating over
+each id in the range but ehh the ranges are smallish anyway and we're still iterating...
+and it's not clear how to improve it since the math trick can't be used
+because of "overlapping" index ids (ie, 12121212 is either 2×1212 or 4×12)
+which also implies using a hashset to keep track of this...
 
 ### improvements
 write down a comment clarifying why i decided one thing?
 but it was intuitive rather than thought through so idk, tricky.
+
+really just do the dumbest possible iteration thingy maybe...
