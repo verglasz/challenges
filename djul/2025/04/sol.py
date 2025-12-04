@@ -1,0 +1,48 @@
+
+
+
+pre_alpha = """Able 	Alfa
+Baker 	Bravo
+Charlie
+Dog 	Delta
+Easy 	Echo
+Fox 	Foxtrot
+George 	Golf
+How 	Hotel
+Item 	India
+Jig 	Juliett
+King 	Kilo
+Love 	Lima
+Mike
+Nan 	Nectar 	November
+Oboe 	Oscar
+Peter 	Papa
+Queen 	Quebec
+Roger 	Romeo
+Sugar 	Sierra
+Tare 	Tango
+Uncle 	Uniform
+Victor
+William 	Whiskey
+Xray 	X-ray
+Yoke 	Yankee
+Zebra 	Zulu
+Zero
+Wun
+Too
+Thuh-ree
+Fo-wer
+Fi-yiv
+Six
+Seven
+Ate
+Niner
+"""
+
+alpha = set(w.strip() for w in pre_alpha.lower().split())
+
+while 1:
+    line = input().lower().split()
+    for w in line:
+        if w.strip() in alpha:
+            print(w)
