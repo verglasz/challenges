@@ -8,10 +8,10 @@ use utils::{
 
 fn main() {
     let input: Vec<_> = get_stdinput().collect();
-    let parsed = parse(input.iter().map(|x| x.as_str()));
+    let mut parsed = parse(input.iter().map(|x| x.as_str()));
     let p1 = solve1(&parsed);
     println!("sol1: {p1}");
-    let p2 = solve2(&parsed);
+    let p2 = solve2(&mut parsed);
     println!("sol2: {p2}");
 }
 type Input = VecMat<AChar>;
@@ -25,24 +25,7 @@ fn parse<'a>(lines: impl Iterator<Item = &'a str>) -> Input {
 }
 
 fn solve1(input: &Input) -> usize {
-    let mut total = 0;
-    for (p, c) in input.iter_pos() {
-        if *c != AChar::CommercialAt {
-            continue;
-        }
-        let mut close_rolls = 0;
-        for dir in Dir::ALL {
-            let nd = p.neighbour(dir);
-            let Some(neigh) = input.get(nd) else {
-                continue;
-            };
-            if *neigh == AChar::CommercialAt {
-                close_rolls += 1;
-            }
-        }
-        total += if close_rolls < 4 { 1 } else { 0 };
-    }
-    total
+    find_accessible(input).count()
 }
 
 pub fn find_accessible(map: &Input) -> impl Iterator<Item = Point<usize>> + '_ {
@@ -64,8 +47,18 @@ pub fn find_accessible(map: &Input) -> impl Iterator<Item = Point<usize>> + '_ {
     })
 }
 
-fn solve2(input: &Input) -> usize {
-    0
+fn solve2(input: &mut Input) -> usize {
+    let mut modified = true;
+    let mut total = 0;
+    while modified {
+        let free: Vec<_> = find_accessible(input).collect();
+        modified = !free.is_empty();
+        total += free.len();
+        for p in free {
+            input[p] = AChar::FullStop;
+        }
+    }
+    total
 }
 
 #[cfg(test)]
@@ -82,7 +75,7 @@ mod tests {
     #[test]
     fn test2() {
         let input = include_str!("../test");
-        let input = parse(input.lines());
-        assert_eq!(solve2(&input), 0);
+        let mut input = parse(input.lines());
+        assert_eq!(solve2(&mut input), 43);
     }
 }
