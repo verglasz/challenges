@@ -386,19 +386,31 @@ impl Point<usize> {
         Some(Self { x, y })
     }
 
+    /// Check if the point is in bound for a chart with given size.
     pub fn in_bounds(&self, (width, height): (usize, usize)) -> bool {
         self.x < width && self.y < height
     }
 
+    /// Some(self) if the point is in bounds, else None
     pub fn as_in_bounds(&self, (width, height): (usize, usize)) -> Option<Self> {
         self.in_bounds((width, height)).then_some(*self)
     }
 
-    pub fn neighbours(&self) -> impl Iterator<Item = Self> {
+    /// The point's neighbours in the 4 cardinal directions
+    /// (wrapping to Self's type width on overflow)
+    pub fn cross_neighbours(&self) -> [Self; 4] {
         let p = *self;
-        Dir::CROSS.into_iter().map(move |dir| p.neighbour(dir))
+        Dir::CROSS.map(move |dir| p.neighbour(dir))
     }
 
+    /// The point's neighbours in all 8 directions
+    /// (wrapping to Self's type width on overflow)
+    pub fn all_neighbours(&self) -> [Self; 8] {
+        let p = *self;
+        Dir::ALL.map(move |dir| p.neighbour(dir))
+    }
+    /// Get the point neighbour in the given Dir
+    /// Wraps to Self's type width on overflow
     pub fn neighbour(&self, dir: Dir) -> Self {
         self.wrapping_add_signed(dir.to_delta())
     }
