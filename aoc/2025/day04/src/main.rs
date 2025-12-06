@@ -33,17 +33,13 @@ pub fn find_accessible(map: &Input) -> impl Iterator<Item = Point<usize>> + '_ {
         if *c != AChar::CommercialAt {
             None?;
         }
-        let mut close_rolls = 0;
-        for dir in Dir::ALL {
-            let nd = p.neighbour(dir);
-            let Some(neigh) = map.get(nd) else {
-                continue;
-            };
-            if *neigh == AChar::CommercialAt {
-                close_rolls += 1;
-            }
-        }
-        (close_rolls < 4).then_some(p)
+        let close = p
+            .all_neighbours()
+            .into_iter()
+            .filter_map(|n| map.get(n))
+            .filter(|&&n| n == AChar::CommercialAt)
+            .count();
+        (close < 4).then_some(p)
     })
 }
 
