@@ -33,13 +33,14 @@ fn parse<'a>(mut lines: impl Iterator<Item = &'a str>, total: usize) -> Input {
 
 fn solve1((nums, ops): &Input) -> usize {
     let mut total = 0;
+    let nums = nums.transpose();
     for (i, op) in ops.iter().enumerate() {
         match op {
             b'+' => {
-                total += nums.iter_rows().map(|nv| nv[i]).sum::<usize>();
+                total += nums[i].iter().sum::<usize>();
             }
             b'*' => {
-                total += nums.iter_rows().map(|nv| nv[i]).product::<usize>();
+                total += nums[i].iter().product::<usize>();
             }
             _ => panic!("unknown op {}", *op as char),
         }
@@ -94,6 +95,18 @@ mod tests {
         let input = include_str!("../test");
         let input = parse(input.lines(), 4);
         assert_eq!(solve1(&input), 4277556);
+    }
+    #[test]
+    fn testinput() {
+        let input: Vec<_> = include_str!("../input")
+            .lines()
+            .map(str::to_string)
+            .collect();
+        let parsed = parse(input.iter().map(|x| x.as_str()), input.len());
+        let p1 = solve1(&parsed);
+        println!("sol1: {p1}");
+        let p2 = solve2(input);
+        println!("sol2: {p2}");
     }
 
     #[test]

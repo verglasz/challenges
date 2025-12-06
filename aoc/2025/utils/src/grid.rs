@@ -33,6 +33,13 @@ impl<T> Index<Point<usize>> for VecMat<T> {
         self.get(index).expect("indexed point must be in bounds")
     }
 }
+impl<T> Index<usize> for VecMat<T> {
+    type Output = [T];
+
+    fn index(&self, index: usize) -> &Self::Output {
+        self.get_row(index).expect("indexed row must be in bounds")
+    }
+}
 
 impl<T> TryFrom<Vec<Vec<T>>> for VecMat<T> {
     type Error = Vec<Vec<T>>;
@@ -176,6 +183,14 @@ impl<T> VecMat<T> {
         Ok(Self { data })
     }
 
+    // construct a matrix from an iterator (rows) of iterable (columns)
+    pub fn from_nestiter<I: IntoIterator<Item = T>>(
+        iter: impl Iterator<Item = I>,
+    ) -> Result<Self, Vec<Vec<T>>> {
+        let data = iter.map(|x| x.into_iter().collect()).collect();
+        Self::new(data)
+    }
+
     pub fn for_each(&self, mut f: impl FnMut(Point<usize>, &T)) {
         for (y, row) in self.data.iter().enumerate() {
             for (x, cell) in row.iter().enumerate() {
@@ -206,6 +221,15 @@ impl<T> VecMat<T> {
 
     pub fn rows(&self) -> usize {
         self.data.len()
+    }
+
+    pub fn get_row(&self, idx: usize) -> Option<&[T]> {
+        self.data.get(idx).map(Vec::as_slice)
+    }
+    pub fn get_row_mut(&mut self, idx: usize) -> Option<&mut [T]> {
+        // it's fine to give a &mut [T] reference since
+        // that means callers can't change its length
+        self.data.get_mut(idx).map(Vec::as_mut_slice)
     }
 
     pub fn shape(&self) -> (usize, usize) {
@@ -251,6 +275,21 @@ impl<T> VecMat<T> {
 
     pub fn iter_all(&self) -> impl Iterator<Item = &T> {
         self.data.iter().flat_map(|v| v.iter())
+    }
+
+    /// Obtain a new matrix whose rows are the coulmns of the current matrix
+    /// and vice versa
+    pub fn transpose(&self) -> Self
+    where
+        T: Clone,
+    {
+        let data = (0..self.cols())
+            .map(|c| (0..self.rows()).map(|r| self.data[r][c].clone()).collect())
+            .collect();
+        let mat = Self { data };
+        // we don't need to check dimensions since it's aleady a matrix
+        debug_assert!(mat.data.len() == 0 || mat.data.iter().all(|x| x.len() == mat.data[0].len()));
+        mat
     }
 }
 
