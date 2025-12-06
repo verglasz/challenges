@@ -46,5 +46,16 @@ pub fn digits(n: usize) -> usize {
     digits
 }
 
+pub fn from_ascii_digit_skipping(digs: impl Iterator<Item = u8>) -> usize {
+    let mut num = 0;
+    for d in digs {
+        if matches!(d, b'0'..=b'9') {
+            num *= 10;
+            num += (d - b'0') as usize;
+        } // else we skip
+    }
+    num
+}
+
 #[cfg(test)]
 mod tests {}
