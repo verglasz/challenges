@@ -6,7 +6,7 @@ use utils::get_stdinput;
 fn main() {
     let input: Vec<_> = get_stdinput().collect();
     let parsed = parse(input.iter().map(|x| x.as_str()));
-    let p1 = solve1(&parsed);
+    let p1 = solve1better(&parsed);
     println!("sol1: {p1:?}");
     let p2 = solve2(&parsed);
     println!("sol2: {p2:?}");
@@ -72,18 +72,24 @@ fn solve1better((ranges, items): &Input) -> usize {
     let mut ranges = &ranges[..];
     let mut nfresh = 0;
     for item in items {
-        // this could also be a binsearch
         let Some(r) = ranges.iter().position(|r| r.start() >= item) else {
             break;
         };
+        // also binsearch
+        // let r = ranges
+        //     .binary_search_by_key(&(item * 2), |rg| 2 * rg.start() + 1)
+        //     .expect_err("even/odd so should work");
+        // if r == ranges.len() {
+        //     break;
+        // }
         ranges = &ranges[r..];
         nfresh += if ranges[0].end() >= item { 1 } else { 0 };
     }
     nfresh
 }
 
-fn solve2(input: &Input) -> usize {
-    0
+fn solve2((ranges, _): &Input) -> usize {
+    ranges.iter().map(|x| x.end() - x.start() + 1).sum()
 }
 
 #[cfg(test)]
@@ -98,6 +104,13 @@ mod tests {
     }
 
     #[test]
+    fn test1eq() {
+        let input = include_str!("../input");
+        let input = parse(input.lines());
+        assert_eq!(solve1better(&input), solve1(&input));
+    }
+
+    #[test]
     fn test1b() {
         let input = include_str!("../test");
         let input = parse(input.lines());
@@ -108,6 +121,6 @@ mod tests {
     fn test2() {
         let input = include_str!("../test");
         let input = parse(input.lines());
-        assert_eq!(solve2(&input), 0);
+        assert_eq!(solve2(&input), 14);
     }
 }
