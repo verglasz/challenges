@@ -2,7 +2,21 @@
 
 thepwd := `pwd`
 
+list:
+	just -l
+
 [no-cd]
 naoc DAY="":
 	@echo "new Advent of Code for day {{DAY}}"
 	cargo aoc {{if DAY != "" { DAY } else { `date "+%d"`} }} --template "{{thepwd}}/00/main.rs"
+
+[no-cd]
+r DAY="":
+	@echo "run Advent of Code for day {{DAY}}"
+	cargo build -r
+	time {{thepwd}}/`date "+%Y"`/target/release/{{if DAY != "" { "day" + DAY } else { '$(basename "$(pwd)")' } }} < input
+
+[no-cd]
+t DAY="":
+	@echo "test Advent of Code for day {{DAY}}"
+	cargo test

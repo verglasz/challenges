@@ -46,6 +46,8 @@ pub fn digits(n: usize) -> usize {
     digits
 }
 
+/// Convert a sequences of maybe ascii digits iinto a number,
+/// skipping any character which isn't a digit
 pub fn from_ascii_digit_skipping(digs: impl Iterator<Item = u8>) -> usize {
     let mut num = 0;
     for d in digs {

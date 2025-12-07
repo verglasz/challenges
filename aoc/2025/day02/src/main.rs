@@ -67,8 +67,8 @@ fn solve2(input: &Input) -> usize {
     let mut ids = HashSet::new();
     for range in input {
         print!("range {range:?}: ");
-        let first = find_rep_n_above(range.start(), false, range.end());
-        let next_last = find_rep_n_above(range.end(), true, range.end());
+        let first = find_rep_n_above(range.start(), false, range.end().len());
+        let next_last = find_rep_n_above(range.end(), true, range.end().len());
         for (f, l) in first.zip(next_last) {
             // println!("f:{f:?} l:{l:?}");
             let fa = f.1;
@@ -87,9 +87,12 @@ fn solve2(input: &Input) -> usize {
 }
 
 /// return a vector of repeat_times, base_id
-fn find_rep_n_above(start: &str, strict: bool, stop: &str) -> impl Iterator<Item = (usize, usize)> {
+fn find_rep_n_above(
+    start: &str,
+    strict: bool,
+    max_reps: usize,
+) -> impl Iterator<Item = (usize, usize)> {
     assert!(start.len() > 0);
-    let max_reps = stop.len();
     (2..=max_reps).map(move |reps| {
         let digs = start.len() / reps;
         let num = if start.len() % reps != 0 {
