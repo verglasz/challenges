@@ -68,4 +68,3 @@ touch "${commands_file}"
 
 # note tee -a again
 cat <(sponge < "${commands_file}" | slowlines | tee /dev/stderr  | nocomment ) - | mudshort |  tee -a "${new_commands}" | nc "${ip}" "${port}"
-

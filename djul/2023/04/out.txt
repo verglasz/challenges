@@ -1,0 +1,5 @@
+;FFMETADATA1
+DATE=2023/12/03 17:10:27
+SCENE=Scene
+FILE=C:\\Users\\Kalle\\Desktop\\blender\\react.blend
+encoder=Lavf60.16.100

@@ -1,0 +1,76 @@
+html {
+    width: 800px
+}
+
+body {
+    background-color: #ffffcc;
+    font-family: 'Comic Sans MS', cursive;
+    /* Comic Sans MS was a popular font in the 90s */
+    margin: 0;
+    /* Remove default margin */
+    overflow-x: hidden;
+    /* Hide horizontal scrollbar for small screens */
+}
+
+h1 {
+    font-size: 2.5em;
+    /* Larger font size for H1 */
+    color: #ff00ff;
+    /* Magenta color for H1 text */
+    text-shadow: 2px 2px 4px #000000;
+    /* Text shadow for a bold effect */
+    letter-spacing: 2px;
+    /* Increased letter spacing */
+    border: 2px solid #000;
+    /* Add a border around the H1 text */
+    padding: 10px;
+    /* Add some padding to the H1 text */
+    display: inline-block;
+    background: blue;
+}
+
+input[type="password"], input[type="submit"] {
+    padding: 8px;
+    font-family: 'Arial', sans-serif;
+    font-size: 14px;
+    border: 2px solid #000;
+    background-color: #ffffff;
+    margin-right: 10px;
+  }
+
+  button[type="submit"] {
+    background-color: #008080;
+    color: #ffffff;
+    cursor: pointer;
+  }
+
+.content-container {
+    background-image: url("/css/6b97eiot.bmp");
+    background-size: 150px;
+    background-repeat: repeat;
+    max-width: 800px;
+    /* Fixed width for the content area */
+    height: 700px;
+    margin: auto;
+    /* Center the content on the screen */
+    padding: 20px;
+    border: 2px solid #000;
+    /* Border around the content area */
+}
+
+.blue-background {
+    background-color: #add8e6;
+    /* Light blue color for divs */
+    padding: 20px;
+    margin-bottom: 10px;
+    border: 1px solid #000;
+    /* Black border for divs */
+}
+
+.cool-image {
+    display: block;
+    margin: 20px auto; /* Center the image and add vertical margin */
+    max-width: 100%;
+    height: auto;
+    padding: 10px; /* Add padding around the image */
+  }

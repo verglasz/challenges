@@ -1,0 +1,615 @@
+{
+  "data": {
+    "__schema": {
+      "types": [
+        {
+          "name": "JSON",
+          "fields": null
+        },
+        {
+          "name": "Country",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "ponds",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "latitude",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "longitude",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            }
+          ]
+        },
+        {
+          "name": "String",
+          "fields": null
+        },
+        {
+          "name": "Float",
+          "fields": null
+        },
+        {
+          "name": "Query",
+          "fields": [
+            {
+              "name": "country",
+              "type": {
+                "name": "Country",
+                "kind": "OBJECT",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "countries",
+              "type": {
+                "name": null,
+                "kind": "LIST",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "duck",
+              "type": {
+                "name": "Duck",
+                "kind": "INTERFACE",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "pond",
+              "type": {
+                "name": "Pond",
+                "kind": "OBJECT",
+                "inputFields": null
+              }
+            }
+          ]
+        },
+        {
+          "name": "ID",
+          "fields": null
+        },
+        {
+          "name": "Duck",
+          "fields": [
+            {
+              "name": "id",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "family",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            }
+          ]
+        },
+        {
+          "name": "FancyDuck",
+          "fields": [
+            {
+              "name": "id",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "family",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "color",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            }
+          ]
+        },
+        {
+          "name": "Mallard",
+          "fields": [
+            {
+              "name": "id",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "family",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "ability",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            }
+          ]
+        },
+        {
+          "name": "EvilDuck",
+          "fields": [
+            {
+              "name": "id",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "family",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "flag",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            }
+          ]
+        },
+        {
+          "name": "Pond",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "ducks",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            }
+          ]
+        },
+        {
+          "name": "Boolean",
+          "fields": null
+        },
+        {
+          "name": "__Schema",
+          "fields": [
+            {
+              "name": "description",
+              "type": {
+                "name": "String",
+                "kind": "SCALAR",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "types",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "queryType",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "mutationType",
+              "type": {
+                "name": "__Type",
+                "kind": "OBJECT",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "subscriptionType",
+              "type": {
+                "name": "__Type",
+                "kind": "OBJECT",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "directives",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            }
+          ]
+        },
+        {
+          "name": "__Type",
+          "fields": [
+            {
+              "name": "kind",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "name",
+              "type": {
+                "name": "String",
+                "kind": "SCALAR",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "description",
+              "type": {
+                "name": "String",
+                "kind": "SCALAR",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "specifiedByURL",
+              "type": {
+                "name": "String",
+                "kind": "SCALAR",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "fields",
+              "type": {
+                "name": null,
+                "kind": "LIST",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "interfaces",
+              "type": {
+                "name": null,
+                "kind": "LIST",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "possibleTypes",
+              "type": {
+                "name": null,
+                "kind": "LIST",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "enumValues",
+              "type": {
+                "name": null,
+                "kind": "LIST",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "inputFields",
+              "type": {
+                "name": null,
+                "kind": "LIST",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "ofType",
+              "type": {
+                "name": "__Type",
+                "kind": "OBJECT",
+                "inputFields": null
+              }
+            }
+          ]
+        },
+        {
+          "name": "__TypeKind",
+          "fields": null
+        },
+        {
+          "name": "__Field",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "description",
+              "type": {
+                "name": "String",
+                "kind": "SCALAR",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "args",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "type",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "isDeprecated",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "deprecationReason",
+              "type": {
+                "name": "String",
+                "kind": "SCALAR",
+                "inputFields": null
+              }
+            }
+          ]
+        },
+        {
+          "name": "__InputValue",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "description",
+              "type": {
+                "name": "String",
+                "kind": "SCALAR",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "type",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "defaultValue",
+              "type": {
+                "name": "String",
+                "kind": "SCALAR",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "isDeprecated",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "deprecationReason",
+              "type": {
+                "name": "String",
+                "kind": "SCALAR",
+                "inputFields": null
+              }
+            }
+          ]
+        },
+        {
+          "name": "__EnumValue",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "description",
+              "type": {
+                "name": "String",
+                "kind": "SCALAR",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "isDeprecated",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "deprecationReason",
+              "type": {
+                "name": "String",
+                "kind": "SCALAR",
+                "inputFields": null
+              }
+            }
+          ]
+        },
+        {
+          "name": "__Directive",
+          "fields": [
+            {
+              "name": "name",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "description",
+              "type": {
+                "name": "String",
+                "kind": "SCALAR",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "isRepeatable",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "locations",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            },
+            {
+              "name": "args",
+              "type": {
+                "name": null,
+                "kind": "NON_NULL",
+                "inputFields": null
+              }
+            }
+          ]
+        },
+        {
+          "name": "__DirectiveLocation",
+          "fields": null
+        }
+      ],
+      "directives": [
+        {
+          "name": "include",
+          "description": "Directs the executor to include this field or fragment only when the `if` argument is true."
+        },
+        {
+          "name": "skip",
+          "description": "Directs the executor to skip this field or fragment when the `if` argument is true."
+        },
+        {
+          "name": "deprecated",
+          "description": "Marks an element of a GraphQL schema as no longer supported."
+        },
+        {
+          "name": "specifiedBy",
+          "description": "Exposes a URL that specifies the behavior of this scalar."
+        }
+      ]
+    }
+  }
+}
