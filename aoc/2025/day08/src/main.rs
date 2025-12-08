@@ -7,7 +7,7 @@ fn main() {
     let input: Vec<_> = get_stdinput().collect();
     let parsed = parse(input.iter().map(|x| x.as_str()));
     let p1 = solve1(&parsed, 1000);
-    // println!("sol1: {p1}");
+    println!("sol1: {p1}");
     let p2 = solve2(&parsed);
     println!("sol2: {p2}");
 }
@@ -55,11 +55,8 @@ fn parse<'a>(lines: impl Iterator<Item = &'a str>) -> Input {
 }
 
 fn solve1(input: &Input, mut connect: usize) -> usize {
-    let mut pairs: Vec<_> = input
-        .iter()
-        .copied()
-        .enumerate()
-        .flat_map(|(i, el)| (0..i).map(move |j| (i, j)))
+    let mut pairs: Vec<_> = (0..input.len())
+        .flat_map(|i| (0..i).map(move |j| (i, j)))
         .collect();
     pairs.sort_by_cached_key(|&(x, y)| input[x].sqdist(&input[y]));
     let mut i = 0;
