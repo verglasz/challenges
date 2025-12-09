@@ -380,6 +380,32 @@ impl Delta<isize> {
     pub fn manhattan(&self) -> usize {
         self.dx.abs() as usize + self.dy.abs() as usize
     }
+
+    pub fn dir(&self) -> Option<Dir> {
+        Some(if self.dx > 0 {
+            if self.dy > 0 {
+                Dir::NE
+            } else if self.dy < 0 {
+                Dir::SE
+            } else {
+                Dir::E
+            }
+        } else if self.dx < 0 {
+            if self.dy > 0 {
+                Dir::NW
+            } else if self.dy < 0 {
+                Dir::SW
+            } else {
+                Dir::W
+            }
+        } else if self.dy > 0 {
+            Dir::N
+        } else if self.dy < 0 {
+            Dir::S
+        } else {
+            None?
+        })
+    }
 }
 
 impl<T> Point<T> {
@@ -549,6 +575,19 @@ impl Dir {
     pub fn to_delta<T: From<i8>>(&self) -> Delta<T> {
         let (dx, dy) = self.to_offset();
         Delta::new(dx, dy)
+    }
+
+    pub fn opposite(self) -> Self {
+        match self {
+            Dir::N => Dir::S,
+            Dir::NE => Dir::SW,
+            Dir::E => Dir::W,
+            Dir::SE => Dir::NW,
+            Dir::S => Dir::N,
+            Dir::SW => Dir::NE,
+            Dir::W => Dir::E,
+            Dir::NW => Dir::SE,
+        }
     }
 }
 
