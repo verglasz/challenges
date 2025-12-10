@@ -10,7 +10,7 @@ use nom::{
 };
 use pathfinding::{directed::astar, prelude::bfs};
 use rayon::prelude::*;
-use std::str::FromStr;
+use std::{collections::HashMap, str::FromStr};
 use utils::get_stdinput;
 
 fn main() {
@@ -127,13 +127,29 @@ fn solve2_i16<const N: usize>(target: &[JT], buttons: &[BT]) -> usize {
         .iter()
         .map(|b| make_arr(b).map(|x| x as i16))
         .collect();
-    s2_i16(arr_target, &arr_buttons, isize::MAX)
-        .try_into()
-        .expect("nonnegative")
+    s2_i16(
+        arr_target,
+        &arr_buttons,
+        isize::MAX,
+        //&mut HashMap::new(),
+    )
+    .try_into()
+    .expect("nonnegative")
 }
 
-fn s2_i16<const N: usize>(target: [i16; N], buttons: &[[i16; N]], best: isize) -> isize {
+fn s2_i16<const N: usize>(
+    target: [i16; N],
+    buttons: &[[i16; N]],
+    best: isize,
+    // memo: &mut HashMap<[i16; N], isize>,
+) -> isize {
     let mut min = best - 1;
+    // if let Some(x) = memo.get(&target) {
+    //     // return *x;
+    // }
+    if target.iter().copied().max().unwrap() as isize >= min {
+        return best;
+    }
     for (i, b) in buttons.iter().enumerate() {
         let t = subarr16(target, b);
         if t == [0; N] {
@@ -142,9 +158,15 @@ fn s2_i16<const N: usize>(target: [i16; N], buttons: &[[i16; N]], best: isize) -
         if t.iter().any(|&x| x < 0) {
             continue;
         }
-        let n = s2_i16(t, &buttons[i..], min);
+        let n = s2_i16(
+            t,
+            &buttons[i..],
+            min,
+            //memo
+        );
         min = min.min(n);
     }
+    // memo.insert(target, min + 1);
     min + 1
 }
 
@@ -317,7 +339,20 @@ fn solve2(input: &Input) -> usize {
             .max()
             .unwrap()
     );
-    input.par_iter().map(|x| dbg!(x.solve2())).sum()
+    // 14767
+    // input
+    //     .iter()
+    //     .map(|x| x.jolts.iter().copied().max().unwrap() as usize)
+    //     .sum()
+    input
+        .par_iter()
+        .enumerate()
+        .map(|(i, p)| {
+            let s = p.solve2();
+            println!("{i}: {s}");
+            s
+        })
+        .sum()
 }
 
 #[cfg(test)]
