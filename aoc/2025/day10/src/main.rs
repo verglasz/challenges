@@ -1,4 +1,4 @@
-use std::str::FromStr;
+use std::{cell::RefCell, iter::Map, mem::transmute, rc::Rc, str::FromStr};
 
 use nom::{
     bytes::complete::is_not,
@@ -96,23 +96,36 @@ impl Problem {
     }
 
     fn solve2(&self) -> usize {
+        let btn = Rc::new(self.buttons.clone());
+        let neighs = move |x: &Vec<JT>| joggle(x, btn.clone());
         let sol = astar::astar(
             &vec![0; self.jolts.len()],
-            move |x| joggle(x, &self.buttons),
+            neighs,
             |x| heur(x, &self.jolts),
             |x| x == &self.jolts,
         )
+        // let sol = astar::astar(
+        //     &(vec![0; self.jolts.len()], &self.buttons),
+        //     unsafe { transmute::<for <'a> fn (&'a) (jog) },
+        //     |x| heur(&x.0, &self.jolts),
+        //     |x| &x.0 == &self.jolts,
+        // )
         .expect("sol exists");
         sol.1
     }
 }
 
-fn joggle<'a, 'b: 'a>(
+// fn jog<'a, 'b>(thing: &'b (Vec<JT>, &'a [BT])) -> impl Iterator<Item = (Vec<JT>, usize)> + 'a {
+//     None.into_iter()
+// }
+
+fn joggle<'b>(
     x: &'b [JT],
-    buttons: &'a [BT],
-) -> impl Iterator<Item = (Vec<JT>, usize)> + 'a {
+    buttons: Rc<Vec<BT>>,
+) -> Box<dyn Iterator<Item = (Vec<JT>, usize)> + 'static> {
     let jolts = x.to_vec();
-    buttons.iter().map(move |&b| (j1(b, jolts.clone()), 1))
+
+    Box::new((0..buttons.len()).map(move |i| (j1(buttons.as_ref()[i], jolts.clone()), 1)))
 }
 
 fn heur(state: &[JT], target_jolts: &[JT]) -> usize {
