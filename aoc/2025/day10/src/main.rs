@@ -138,22 +138,45 @@ fn solve2_i16<const N: usize>(target: &[JT], buttons: &[BT]) -> usize {
 }
 
 fn s2_i16<const N: usize>(
-    target: [i16; N],
+    mut target: [i16; N],
     buttons: &[[i16; N]],
     best: isize,
     // memo: &mut HashMap<[i16; N], isize>,
 ) -> isize {
-    let mut min = best - 1;
+    let mut presses = 1;
+    if let Some(i) = buttons
+        .iter()
+        .copied()
+        .reduce(|a, b| addarr16(a, &b))
+        .expect("buttons is never empty!")
+        .into_iter()
+        .enumerate()
+        .find_map(|(i, x)| (x == 1).then_some(i))
+    {
+        // there is only one button that increases something
+        // we just press this one button as much as we need
+        let tgt = target[i];
+        let btn = buttons.iter().find(|b| b[i] == 1).unwrap();
+        for _ in 0..tgt {
+            target = subarr16(target, btn);
+        }
+        if target == [0; N] {
+            return tgt as isize;
+        }
+        presses += tgt as isize;
+    }
+    let mut min = best - presses;
     // if let Some(x) = memo.get(&target) {
     //     // return *x;
     // }
     if target.iter().copied().max().unwrap() as isize >= min {
         return best;
     }
+
     for (i, b) in buttons.iter().enumerate() {
         let t = subarr16(target, b);
         if t == [0; N] {
-            return 1;
+            return presses;
         }
         if t.iter().any(|&x| x < 0) {
             continue;
@@ -167,7 +190,14 @@ fn s2_i16<const N: usize>(
         min = min.min(n);
     }
     // memo.insert(target, min + 1);
-    min + 1
+    min + presses
+}
+
+fn addarr16<const N: usize>(mut target: [i16; N], b: &[i16; N]) -> [i16; N] {
+    for (i, &b) in b.iter().enumerate() {
+        target[i] += b;
+    }
+    target
 }
 
 fn subarr16<const N: usize>(mut target: [i16; N], b: &[i16; N]) -> [i16; N] {
