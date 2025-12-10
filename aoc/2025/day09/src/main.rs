@@ -1,9 +1,7 @@
-use std::{
-    collections::{HashMap, HashSet},
-    iter::once,
-};
+use std::{collections::HashSet, iter::once};
 
 use utils::{
+    decimals::mask10,
     get_stdinput,
     grid::{Dir, Point, VecMat},
 };
@@ -45,6 +43,24 @@ fn rectangle(p: Point<usize>, q: Point<usize>) -> usize {
 }
 
 fn solve2(input: &Input) -> usize {
+    let x = input.iter().map(|p| p.x).max().unwrap();
+    let y = input.iter().map(|p| p.y).max().unwrap();
+    let factor = (mask10(x.max(y)) / 100).max(1);
+    dbg!(factor);
+    let map = input
+        .iter()
+        .map(|p| Point::new(p.x / factor, p.y / factor))
+        .collect::<HashSet<_>>();
+    dbg!(&map);
+    let arena = VecMat::filled((x / factor + 1, y / factor + 1), &'.');
+    println!(
+        "{}",
+        arena.formatter_with(|y, x, c| if map.contains(&Point::new(x, y)) {
+            '#'
+        } else {
+            *c
+        })
+    );
     let cor = &corners(input);
     input
         .iter()
@@ -71,7 +87,8 @@ impl Corner {
         let y = Point::new(p.y, q.x);
         [p, q, x, y].into_iter().all(|k| {
             let d = self.p.delta_to(k).unwrap().dir().unwrap_or(self.inside);
-            let aw = (self.inside.id() as i8 - d.id() as i8).abs() <= 1;
+            let aa = (self.inside.id() as i8 - d.id() as i8).abs();
+            let aw = aa <= 1 || aa >= 7;
             if !aw {
                 println!("corner {self:?} disallows {p:?}{q:?}");
             }
@@ -84,8 +101,9 @@ impl Corner {
         let d1 = y.delta_to(x).unwrap().dir().unwrap();
         let d2 = y.delta_to(z).unwrap().dir().unwrap();
         let (inside, turn) = between(d1, d2);
-
-        (Self { p: y, inside }, turn)
+        let c = Self { p: y, inside };
+        println!("corner {c:?} from xyz={:?}", (x, y, z));
+        (c, turn)
     }
 }
 
@@ -153,6 +171,12 @@ mod tests {
     #[test]
     fn test2() {
         let input = include_str!("../test");
+        let input = parse(input.lines());
+        assert_eq!(solve2(&input), 24);
+    }
+    #[test]
+    fn test2b() {
+        let input = include_str!("../test2");
         let input = parse(input.lines());
         assert_eq!(solve2(&input), 24);
     }
