@@ -3,5 +3,10 @@ name = "day10"
 version = "0.0.0"
 edition = "2024"
 
+[profile.release]
+debug = true
+
 [dependencies]
+nom = "8.0.0"
+pathfinding = "4.14.0"
 utils = { version = "0.0.4", path = "../utils" }
