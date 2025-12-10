@@ -100,20 +100,21 @@ impl Problem {
         let mut target = self.jolts.clone();
         let mut buttons = self.buttons.clone();
         buttons.sort_by_key(|b| !b.len());
-        s2(&buttons[..], &mut target, None).expect("solution")
+        s2(&buttons[..], &mut target, isize::MAX)
+            .try_into()
+            .expect("positive")
     }
 }
 
-fn s2(buttons: &[BT], target: &mut [JT], current_min: Option<usize>) -> Option<usize> {
+fn s2(buttons: &[BT], target: &mut [JT], mut best: isize) -> isize {
     if target.iter().all(|x| *x == 0) {
-        return Some(0);
+        return 0;
     }
-    if current_min == Some(0) {
-        return None;
-    }
-    let mut min = current_min.map(|x| x - 1);
-
+    let mut min = best - 1;
     for (i, b) in buttons.iter().enumerate() {
+        if min < 1 {
+            break;
+        }
         // println!("trying button {i}: {b:?}");
         if joggle(b, target).is_err() {
             // println!("can't do button {i}");
@@ -121,11 +122,11 @@ fn s2(buttons: &[BT], target: &mut [JT], current_min: Option<usize>) -> Option<u
         }
         // println!("new state {target:?}");
         let n = s2(&buttons[i..], target, min);
-        min = min.or(n);
+        min = min.min(n);
         // println!("new min {min:?}");
         unjoggle(b, target);
     }
-    min.map(|x| x + 1)
+    min + 1
 }
 
 fn unjoggle(b: &[u8], target: &mut [u16]) {
@@ -193,6 +194,15 @@ fn solve1(input: &Input) -> usize {
 }
 
 fn solve2(input: &Input) -> usize {
+    println!(
+        "max jolts {} max btn len {}",
+        input.iter().map(|i| i.jolts.len()).max().unwrap(),
+        input
+            .iter()
+            .map(|i| i.buttons.iter().map(|bs| bs.len()).max().unwrap())
+            .max()
+            .unwrap()
+    );
     input.par_iter().map(|x| x.solve2()).sum()
 }
 
