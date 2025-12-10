@@ -108,9 +108,10 @@ fn s2(buttons: &[BT], target: &mut [JT], current_min: Option<usize>) -> Option<u
     if target.iter().all(|x| *x == 0) {
         return Some(0);
     }
-    // if current_min == Some(0) {
-    //     return None;
-    // }
+    if current_min == Some(0) {
+        return None;
+    }
+    let mut min = current_min.map(|x| x - 1);
 
     for (i, b) in buttons.iter().enumerate() {
         // println!("trying button {i}: {b:?}");
@@ -119,16 +120,12 @@ fn s2(buttons: &[BT], target: &mut [JT], current_min: Option<usize>) -> Option<u
             continue;
         }
         // println!("new state {target:?}");
-        if let Some(n) = s2(&buttons[i..], target, None) {
-            unjoggle(b, target);
-            return Some(n + 1);
-        } else {
-            unjoggle(b, target);
-        }
+        let n = s2(&buttons[i..], target, min);
+        min = min.or(n);
         // println!("new min {min:?}");
         unjoggle(b, target);
     }
-    None
+    min.map(|x| x + 1)
 }
 
 fn unjoggle(b: &[u8], target: &mut [u16]) {
