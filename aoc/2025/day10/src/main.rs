@@ -1,5 +1,3 @@
-use std::{cell::RefCell, iter::Map, mem::transmute, rc::Rc, str::FromStr};
-
 use nom::{
     bytes::complete::is_not,
     character::{
@@ -12,6 +10,8 @@ use nom::{
     Parser,
 };
 use pathfinding::{directed::astar, prelude::bfs};
+use rayon::prelude::*;
+use std::{cell::RefCell, iter::Map, mem::transmute, rc::Rc, str::FromStr};
 use utils::get_stdinput;
 
 fn main() {
@@ -193,7 +193,7 @@ fn solve1(input: &Input) -> usize {
 }
 
 fn solve2(input: &Input) -> usize {
-    input.iter().map(|x| x.solve2()).sum()
+    input.par_iter().map(|x| x.solve2()).sum()
 }
 
 #[cfg(test)]

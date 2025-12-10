@@ -9,4 +9,5 @@ debug = true
 [dependencies]
 nom = "8.0.0"
 pathfinding = "4.14.0"
+rayon = "1.11.0"
 utils = { version = "0.0.4", path = "../utils" }
