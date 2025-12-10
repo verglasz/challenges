@@ -30,7 +30,7 @@ struct Problem {
     buttons: Vec<BT>,
     jolts: Vec<JT>,
 }
-type BT = u64; //button type
+type BT = Vec<u8>; //button type
 type JT = u16; //jolt type
 
 #[derive(Debug, Clone, Copy, Eq, PartialEq, Hash)]
@@ -55,8 +55,8 @@ impl FromStr for Problem {
             char('('),
             separated_list0(char(','), digit0.map(|x: &str| x.parse().unwrap())),
             char(')'),
-        )
-        .map(|x| make_pattern(x.iter().copied()));
+        );
+        // .map(|x| make_pattern(x.iter().copied()));
         let jolt = delimited(
             char('{'),
             separated_list0(char(','), digit0.map(|x: &str| x.parse().unwrap())),
@@ -84,49 +84,81 @@ impl FromStr for Problem {
 
 impl Problem {
     fn solve1(&self) -> usize {
-        // let buttons: Vec<_> = self
-        //     .buttons
-        //     .iter()
-        //     .map(|x| make_pattern(x.iter().copied()))
-        //     .collect();
+        let buttons: Vec<_> = self
+            .buttons
+            .iter()
+            .map(|x| make_pattern(x.iter().copied()))
+            .collect();
 
         let sol =
-            bfs(&0, |x| toggle(*x, &self.buttons), |x| *x == self.target).expect("solution exists");
+            bfs(&0, |x| toggle(*x, &buttons), |x| *x == self.target).expect("solution exists");
         sol.len() - 1
     }
 
     fn solve2(&self) -> usize {
-        let btn = Rc::new(self.buttons.clone());
-        let neighs = move |x: &Vec<JT>| joggle(x, btn.clone());
-        let sol = astar::astar(
-            &vec![0; self.jolts.len()],
-            neighs,
-            |x| heur(x, &self.jolts),
-            |x| x == &self.jolts,
-        )
-        // let sol = astar::astar(
-        //     &(vec![0; self.jolts.len()], &self.buttons),
-        //     unsafe { transmute::<for <'a> fn (&'a) (jog) },
-        //     |x| heur(&x.0, &self.jolts),
-        //     |x| &x.0 == &self.jolts,
-        // )
-        .expect("sol exists");
-        sol.1
+        // let mut start = vec![0; self.jolts.len()];
+        let mut target = self.jolts.clone();
+        let mut buttons = self.buttons.clone();
+        buttons.sort_by_key(|b| !b.len());
+        s2(&buttons[..], &mut target, None).expect("solution")
     }
+}
+
+fn s2(buttons: &[BT], target: &mut [JT], current_min: Option<usize>) -> Option<usize> {
+    if target.iter().all(|x| *x == 0) {
+        return Some(0);
+    }
+    // if current_min == Some(0) {
+    //     return None;
+    // }
+
+    for (i, b) in buttons.iter().enumerate() {
+        // println!("trying button {i}: {b:?}");
+        if joggle(b, target).is_err() {
+            // println!("can't do button {i}");
+            continue;
+        }
+        // println!("new state {target:?}");
+        if let Some(n) = s2(&buttons[i..], target, None) {
+            unjoggle(b, target);
+            return Some(n + 1);
+        } else {
+            unjoggle(b, target);
+        }
+        // println!("new min {min:?}");
+        unjoggle(b, target);
+    }
+    None
+}
+
+fn unjoggle(b: &[u8], target: &mut [u16]) {
+    for x in b {
+        target[*x as usize] += 1;
+    }
+}
+
+fn joggle(b: &[u8], target: &mut [JT]) -> Result<(), ()> {
+    if b.iter().any(|x| target[*x as usize] == 0) {
+        return Err(());
+    }
+    for x in b {
+        target[*x as usize] -= 1;
+    }
+    Ok(())
 }
 
 // fn jog<'a, 'b>(thing: &'b (Vec<JT>, &'a [BT])) -> impl Iterator<Item = (Vec<JT>, usize)> + 'a {
 //     None.into_iter()
 // }
 
-fn joggle<'b>(
-    x: &'b [JT],
-    buttons: Rc<Vec<BT>>,
-) -> Box<dyn Iterator<Item = (Vec<JT>, usize)> + 'static> {
-    let jolts = x.to_vec();
+// fn joggle<'b>(
+//     x: &'b [JT],
+//     buttons: Rc<Vec<BT>>,
+// ) -> Box<dyn Iterator<Item = (Vec<JT>, usize)> + 'static> {
+//     let jolts = x.to_vec();
 
-    Box::new((0..buttons.len()).map(move |i| (j1(buttons.as_ref()[i], jolts.clone()), 1)))
-}
+//     // Box::new((0..buttons.len()).map(move |i| (j1(buttons.as_ref()[i], jolts.clone()), 1)))
+// }
 
 fn heur(state: &[JT], target_jolts: &[JT]) -> usize {
     state
