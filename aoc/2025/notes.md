@@ -32,3 +32,32 @@ write down a comment clarifying why i decided one thing?
 but it was intuitive rather than thought through so idk, tricky.
 
 really just do the dumbest possible iteration thingy maybe...
+
+## day 10
+
+well p2 looks very annoying...
+~~my current best idea is to do something like, save all combinations of buttons and the highest~~
+
+no nevermind, the order of buttons doesn't matter, so a graph search is very redundant...
+this should have a reasonable recursive solution after all...
+
+the difficult thing is knowing how to prune.
+if we sort buttons based on how many joltages they increase, is it true that
+  the first solution found (if we try buttons in  order with backtracking) is the minimum?
+  it seems likely enough... but doesn't seem to be true on the test sigh
+
+ok well this is a linear integer optimization problem... idk how to do these quickly
+it'll require some reading
+
+a button is a vector (of 1s and 0s) in Z^k where k = num joltages,
+i need to satisfy Σ_i α_i b_i = J while minimising  Σ_i α_i.
+
+should be straightforward as an optimization problem tbh
+
+(first i noted what's equivalent to saying that
+Σ_i α_i (b_i • I) = Σ_i α_i n_i = J • I
+where I is all-ones so n_i is the number of 1s in b_i, naturally this constrains α_i a lot
+since n_i >= n_j if i < j, i (and J•I is fixed) i thought this meant
+that α_i must be greedily maximised but clearly this isn't true because of the obvious reasons
+
+idk i probably should use some optimized ILP solver...

@@ -1,5 +1,6 @@
 [profile.release]
 debug = true
+rustflags = ["-C", "target-cpu=native"]
 
 [workspace]
 resolver = "3"

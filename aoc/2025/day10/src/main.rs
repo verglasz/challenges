@@ -5,13 +5,12 @@ use nom::{
         complete::{digit0, space0, space1},
     },
     multi::{separated_list0, separated_list1},
-    number,
     sequence::{delimited, separated_pair},
     Parser,
 };
 use pathfinding::{directed::astar, prelude::bfs};
 use rayon::prelude::*;
-use std::{cell::RefCell, iter::Map, mem::transmute, rc::Rc, str::FromStr};
+use std::str::FromStr;
 use utils::get_stdinput;
 
 fn main() {
@@ -106,6 +105,10 @@ impl Problem {
     }
 }
 
+fn solve2_u8<const N: usize>(target: &[JT], buttons: &[Vec<BT>]) -> usize {
+    0
+}
+
 fn s2(buttons: &[BT], target: &mut [JT], mut best: isize) -> isize {
     if target.iter().all(|x| *x == 0) {
         return 0;
@@ -195,8 +198,13 @@ fn solve1(input: &Input) -> usize {
 
 fn solve2(input: &Input) -> usize {
     println!(
-        "max jolts {} max btn len {}",
+        "max jolts {} (max val {}) max btn len {} ",
         input.iter().map(|i| i.jolts.len()).max().unwrap(),
+        input
+            .iter()
+            .map(|i| i.jolts.iter().max().unwrap())
+            .max()
+            .unwrap(),
         input
             .iter()
             .map(|i| i.buttons.iter().map(|bs| bs.len()).max().unwrap())
