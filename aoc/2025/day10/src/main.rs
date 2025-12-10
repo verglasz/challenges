@@ -95,6 +95,19 @@ impl Problem {
     }
 
     fn solve2(&self) -> usize {
+        if self.jolts.iter().copied().max().unwrap() == 11256 {
+            match self.jolts.len() {
+                0..=8 => return solve2_u8::<8>(&self.jolts, &self.buttons),
+                9..=16 => return solve2_u8::<16>(&self.jolts, &self.buttons),
+                x => todo!("{x} jolts are too many"),
+            }
+        } else {
+            match self.jolts.len() {
+                0..=8 => return solve2_i16::<8>(&self.jolts, &self.buttons),
+                9..=16 => return solve2_i16::<16>(&self.jolts, &self.buttons),
+                x => todo!("{x} jolts are too many"),
+            }
+        }
         // let mut start = vec![0; self.jolts.len()];
         let mut target = self.jolts.clone();
         let mut buttons = self.buttons.clone();
@@ -105,8 +118,101 @@ impl Problem {
     }
 }
 
-fn solve2_u8<const N: usize>(target: &[JT], buttons: &[Vec<BT>]) -> usize {
-    0
+fn solve2_i16<const N: usize>(target: &[JT], buttons: &[BT]) -> usize {
+    let mut arr_target = [0i16; N];
+    for i in 0..target.len() {
+        arr_target[i] = target[i] as i16;
+    }
+    let arr_buttons: Vec<_> = buttons
+        .iter()
+        .map(|b| make_arr(b).map(|x| x as i16))
+        .collect();
+    s2_i16(arr_target, &arr_buttons, isize::MAX)
+        .try_into()
+        .expect("nonnegative")
+}
+
+fn s2_i16<const N: usize>(target: [i16; N], buttons: &[[i16; N]], best: isize) -> isize {
+    let mut min = best - 1;
+    for (i, b) in buttons.iter().enumerate() {
+        let t = subarr16(target, b);
+        if t == [0; N] {
+            return 1;
+        }
+        if t.iter().any(|&x| x < 0) {
+            continue;
+        }
+        let n = s2_i16(t, &buttons[i..], min);
+        min = min.min(n);
+    }
+    min + 1
+}
+
+fn subarr16<const N: usize>(mut target: [i16; N], b: &[i16; N]) -> [i16; N] {
+    for (i, &b) in b.iter().enumerate() {
+        target[i] -= b;
+    }
+    target
+}
+
+fn solve2_u8<const N: usize>(target: &[JT], buttons: &[BT]) -> usize {
+    let mut arr_target = [0u8; N];
+    for i in 0..target.len() {
+        arr_target[i] = target[i] as u8;
+    }
+    let arr_buttons: Vec<_> = buttons.iter().map(|b| make_arr(b)).collect();
+    dbg!(arr_buttons
+        .iter()
+        .copied()
+        .reduce(addarr)
+        .unwrap()
+        .iter()
+        .filter(|x| **x != 0)
+        .min()
+        .unwrap());
+    s2_u8(arr_target, &arr_buttons, isize::MAX)
+        .try_into()
+        .expect("nonnegative")
+}
+
+fn make_arr<const N: usize>(button: &[u8]) -> [u8; N] {
+    let mut arr = [0; N];
+    for b in button {
+        arr[*b as usize] = 1;
+    }
+    arr
+}
+
+fn s2_u8<const N: usize>(target: [u8; N], buttons: &[[u8; N]], best: isize) -> isize {
+    let mut min = best - 1;
+    for (i, b) in buttons.iter().enumerate() {
+        let Some(t) = subarr(target, *b) else {
+            continue;
+        };
+        if t == [0; N] {
+            return 1;
+        }
+        let n = s2_u8(t, &buttons[i..], min);
+        min = min.min(n);
+    }
+    min + 1
+}
+
+fn addarr<const N: usize>(mut target: [u8; N], b: [u8; N]) -> [u8; N] {
+    for (i, &b) in b.iter().enumerate() {
+        target[i] += b;
+    }
+    target
+}
+
+fn subarr<const N: usize>(mut target: [u8; N], b: [u8; N]) -> Option<[u8; N]> {
+    for (i, &b) in b.iter().enumerate() {
+        if target[i] < b {
+            return None;
+        }
+        target[i] -= b;
+    }
+    Some(target)
 }
 
 fn s2(buttons: &[BT], target: &mut [JT], mut best: isize) -> isize {
@@ -211,7 +317,7 @@ fn solve2(input: &Input) -> usize {
             .max()
             .unwrap()
     );
-    input.par_iter().map(|x| x.solve2()).sum()
+    input.par_iter().map(|x| dbg!(x.solve2())).sum()
 }
 
 #[cfg(test)]

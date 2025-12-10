@@ -1,3 +1,5 @@
+cargo-features = ["profile-rustflags"]
+
 [profile.release]
 debug = true
 rustflags = ["-C", "target-cpu=native"]
