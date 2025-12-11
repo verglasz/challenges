@@ -10,7 +10,12 @@ use nom::{
 };
 use pathfinding::{directed::astar, prelude::bfs};
 use rayon::prelude::*;
-use std::{collections::HashMap, str::FromStr};
+use std::{
+    collections::HashMap,
+    fs::File,
+    io::{BufRead, BufReader},
+    str::FromStr,
+};
 use utils::get_stdinput;
 
 fn main() {
@@ -380,12 +385,36 @@ fn solve2(input: &Input) -> usize {
     //     .iter()
     //     .map(|x| x.jolts.iter().copied().max().unwrap() as usize)
     //     .sum()
+    let mut cache = HashMap::new();
+    if let Ok(f) = File::open("./cached") {
+        for line in BufReader::new(f).lines() {
+            let l = line.unwrap();
+            if l.is_empty() {
+                continue;
+            }
+            let (i, val) = l.split_once(':').unwrap();
+            let i = i.trim().parse::<usize>().unwrap();
+            let val = val
+                .split_whitespace()
+                .next()
+                .unwrap()
+                .parse::<usize>()
+                .unwrap();
+            cache.insert(i, val);
+        }
+    } else {
+        eprintln!("no cache file!");
+    }
     input
         .par_iter()
         .enumerate()
         .map(|(i, p)| {
-            let s = p.solve2();
-            println!("{i}: {s}");
+            let (s, c) = if let Some(val) = cache.get(&i) {
+                (*val, true)
+            } else {
+                (p.solve2(), false)
+            };
+            println!("{i}: {s} ({})", if c { "cached" } else { "fresh" });
             s
         })
         .sum()
