@@ -104,7 +104,7 @@ impl Problem {
         } else {
             match self.jolts.len() {
                 0..=8 => return solve2_i16::<8>(&self.jolts, &self.buttons),
-                9..=16 => return solve2_i16::<16>(&self.jolts, &self.buttons),
+                9..=12 => return solve2_i16::<12>(&self.jolts, &self.buttons),
                 x => todo!("{x} jolts are too many"),
             }
         }
@@ -147,16 +147,22 @@ fn s2_i16<const N: usize>(
     if let Some(i) = buttons
         .iter()
         .copied()
+        .filter(|x| *subarr16(target, x).iter().min().unwrap() >= 0)
         .reduce(|a, b| addarr16(a, &b))
-        .expect("buttons is never empty!")
-        .into_iter()
-        .enumerate()
-        .find_map(|(i, x)| (x == 1).then_some(i))
+        .and_then(|x| {
+            x.into_iter()
+                .enumerate()
+                .find_map(|(i, x)| (x == 1).then_some(i))
+        })
     {
         // there is only one button that increases something
         // we just press this one button as much as we need
         let tgt = target[i];
-        let btn = buttons.iter().find(|b| b[i] == 1).unwrap();
+        let btn = buttons
+            .iter()
+            .filter(|x| *subarr16(target, x).iter().min().unwrap() >= 0)
+            .find(|b| b[i] == 1)
+            .unwrap();
         for _ in 0..tgt {
             target = subarr16(target, btn);
         }
