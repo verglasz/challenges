@@ -23,7 +23,7 @@ fn main() {
     let parsed = parse(input.iter().map(|x| x.as_str()));
     let p1 = solve1(&parsed);
     println!("sol1: {p1}");
-    let p2 = solve2(&parsed);
+    let p2 = solve2(&parsed, "cached");
     println!("sol2: {p2}");
 }
 type Input = Vec<Problem>;
@@ -135,7 +135,7 @@ fn solve2_i16<const N: usize>(target: &[JT], buttons: &[BT]) -> usize {
     s2_i16(
         arr_target,
         &arr_buttons,
-        isize::MAX,
+        2_000,
         //&mut HashMap::new(),
     )
     .try_into()
@@ -180,7 +180,20 @@ fn s2_i16<const N: usize>(
     // if let Some(x) = memo.get(&target) {
     //     // return *x;
     // }
-    if target.iter().copied().max().unwrap() as isize >= min {
+    let min_presses_to_max = target.iter().copied().max().unwrap();
+    if min_presses_to_max as isize >= min {
+        // we can't do better than current best
+        return best;
+    }
+    let total_to_add: i16 = target.iter().copied().sum();
+    let highest_button: i16 = buttons
+        .iter()
+        .filter(|x| *subarr16(target, x).iter().min().unwrap() >= 0)
+        .map(|x| x.iter().sum())
+        .max()
+        .unwrap_or(20);
+    if total_to_add as isize >= min * highest_button as isize {
+        // we can't do better than current best
         return best;
     }
 
@@ -365,7 +378,7 @@ fn solve1(input: &Input) -> usize {
     input.iter().map(|x| x.solve1()).sum()
 }
 
-fn solve2(input: &Input) -> usize {
+fn solve2(input: &Input, cachefile: &str) -> usize {
     println!(
         "max jolts {} (max val {}) max btn len {} ",
         input.iter().map(|i| i.jolts.len()).max().unwrap(),
@@ -386,7 +399,7 @@ fn solve2(input: &Input) -> usize {
     //     .map(|x| x.jolts.iter().copied().max().unwrap() as usize)
     //     .sum()
     let mut cache = HashMap::new();
-    if let Ok(f) = File::open("./cached") {
+    if let Ok(f) = File::open(cachefile) {
         for line in BufReader::new(f).lines() {
             let l = line.unwrap();
             if l.is_empty() {
@@ -435,6 +448,6 @@ mod tests {
     fn test2() {
         let input = include_str!("../test");
         let input = parse(input.lines());
-        assert_eq!(solve2(&input), 33);
+        assert_eq!(solve2(&input, "testcache"), 33);
     }
 }
