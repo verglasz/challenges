@@ -1,5 +1,6 @@
 # AoC 2025
 
+
 Misc notes on the day's problem and how to improve perhaps?
 
 ## day 1
@@ -61,3 +62,28 @@ since n_i >= n_j if i < j, i (and J•I is fixed) i thought this meant
 that α_i must be greedily maximised but clearly this isn't true because of the obvious reasons
 
 idk i probably should use some optimized ILP solver...
+
+meanwhile i made it faster by making things a fixed-size array of i16
+(hoping most things get autovectorised, and avoiding options everywhere so checks
+for ==0 and < 0 are hopefully also vectorised), this made it possible to solve
+the first problem (~26s).
+Adding early pruning if the minimum required is above the current best gave another factor of like 10,
+but the real juicy optim was skipping ahead if only a single button is left that can do one of the
+presses; this cut down the first input problem to 30ms and made it possible to solve the second
+input problem (until now it had remained always unsolved). This is now running on server
+and it does look like it's running much faster than before. The end is in sight.
+
+Probably this does mean that a better optimization would've been trying
+first the buttons which have fewest overlaps (i.e., the ones where, if the k-th joltage value is > 0,
+fewest button contribute to k). Unsure if sorting each recursion or hunting button indices would've
+been the right thing...
+
+anyway as i write this the server has churned through most of the problems and now
+only 12/16 cores are working, which means only 3 out of 4 parallel blocks haven't finished
+which hopefully means only 12 or slightly more problems are still being worked on. Nice!
+
+the bad news is, well, those are pretty slow still, and the last ones to finish didn't even have
+that large output values, so the "complexity" is varying very much based on how "lucky"
+a problem instance is.
+To be fair it does seem very closely related to number of buttons first and
+max jolts second... so yeah cutting down on the buttons early is probably the way to go
